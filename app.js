@@ -51,6 +51,36 @@ function esc(t) {
 }
 // Formtal 0-100 ud fra spillerens værdi (4,0-13,0) – opdateres hver tirsdag ud fra kampe, minutter, mål, assists og kort
 function form(v) { return Math.max(0, Math.min(100, Math.round((v - 4) / 9 * 100))); }
+
+// ---------- Trøjer i klubbernes hjemmebanefarver (krop, ærmer/krave, evt. striber) ----------
+var TROEJER = {
+  FCK: { krop: "#ffffff", kant: "#0b3d91" },
+  BIF: { krop: "#ffd200", kant: "#0a2c74" },
+  FCM: { krop: "#111111", kant: "#d4001f" },
+  AGF: { krop: "#ffffff", kant: "#0055a5" },
+  FCN: { krop: "#e2001a", kant: "#ffffff" },
+  OB:  { krop: "#ffffff", kant: "#005dab", striber: "#005dab" },
+  RFC: { krop: "#0066b3", kant: "#ffffff" },
+  SIF: { krop: "#c8102e", kant: "#ffffff" },
+  SJE: { krop: "#4fa3db", kant: "#ffffff" },
+  VFF: { krop: "#00843d", kant: "#ffffff" },
+  ACH: { krop: "#ffd400", kant: "#111111" },
+  LBK: { krop: "#1e4ba0", kant: "#ffffff" }
+};
+function troeje(klub, str) {
+  var t = TROEJER[klub] || { krop: "#7d8aa0", kant: "#ffffff" };
+  str = str || 18;
+  var krop = "M7 3 L4 4.5 L1.5 9 L4.5 10.5 L5.5 9 L5.5 21 L18.5 21 L18.5 9 L19.5 10.5 L22.5 9 L20 4.5 L17 3 C16 5 14.3 6 12 6 C9.7 6 8 5 7 3 Z";
+  var striber = t.striber ?
+    '<clipPath id="k' + klub + '"><path d="' + krop + '"/></clipPath><g clip-path="url(#k' + klub + ')" fill="' + t.striber + '">' +
+    '<rect x="7.2" y="0" width="2.2" height="24"/><rect x="11" y="0" width="2.2" height="24"/><rect x="14.8" y="0" width="2.2" height="24"/></g>' : "";
+  return '<svg class="troeje" width="' + str + '" height="' + str + '" viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="' + krop + '" fill="' + t.krop + '" stroke="rgba(255,255,255,.55)" stroke-width="0.9" stroke-linejoin="round"/>' + striber +
+    '<path d="M1.5 9 L4 4.5 L7 3 L5.5 9 L4.5 10.5 Z M22.5 9 L20 4.5 L17 3 L18.5 9 L19.5 10.5 Z" fill="' + t.kant + '" opacity=".95"/>' +
+    '<path d="M7 3 C8 5 9.7 6 12 6 C14.3 6 16 5 17 3" fill="none" stroke="' + t.kant + '" stroke-width="1.6"/>' +
+    '</svg>';
+}
+
 function fuldtNavn(s) { return (s.fornavn ? s.fornavn + " " : "") + s.efternavn; }
 function initialer(s) { return ((s.fornavn ? s.fornavn[0] : "") + s.efternavn[0]).toUpperCase(); }
 
@@ -736,7 +766,7 @@ function tegnStatus(u, st) {
   var sidste = D.picks[D.picks.length - 1];
   if (sidste && D.efterId[sidste.spillerId]) {
     var s0 = D.efterId[sidste.spillerId];
-    $("forrigeSpiller").innerHTML = esc(fuldtNavn(s0)) + ' <span class="tag ' + s0.pos + '">' + s0.pos + '</span>';
+    $("forrigeSpiller").innerHTML = troeje(s0.klub, 16) + ' ' + esc(fuldtNavn(s0)) + ' <span class="tag ' + s0.pos + '">' + s0.pos + '</span>';
     $("forrigeMgr").innerHTML = '<span>»</span> ' + esc(holdnavn(sidste.uid)) +
       (sidste.auto ? ' <small style="color:var(--daempet);font-weight:400">(automatisk)</small>' : "");
   } else {
@@ -808,7 +838,7 @@ function tegnStatus(u, st) {
     blok.disabled = false;
     if (valgt && !taget(D.picks)[valgt.id]) {
       blok.classList.add("har-valg", valgt.pos);
-      $("blokFoto").textContent = initialer(valgt);
+      $("blokFoto").innerHTML = troeje(valgt.klub, 44);
       $("blokNavn").textContent = fuldtNavn(valgt).toUpperCase();
       $("blokInfo").innerHTML = '<span class="tag ' + valgt.pos + '">' + valgt.pos + '</span><span class="klub">' +
         esc(KLUBBER[valgt.klub] || valgt.klub) + '</span><span class="prik">·</span>Form ' + form(valgt.pris) +
@@ -872,7 +902,7 @@ function tegnBoard(u, st) {
         html += '<div class="cell klik ' + pick.pos + '" data-spiller="' + esc(pick.spillerId) + '" data-ejer="' + esc(uid) + '" tabindex="0" role="button">' +
           '<div class="c-top"><span class="c-lab">' + esc(s.fornavn ? s.fornavn + " · " : "") + pick.pos + ' · ' + esc(pick.klub) + '</span>' +
           (rp ? '<span class="c-point">' + (rp.point > 0 ? "+" : "") + rp.point + '</span>' : '') +
-          '</div><div class="c-navn">' + esc(s.efternavn) + '</div></div>';
+          '</div><div class="c-navn">' + troeje(pick.klub, 16) + '<span>' + esc(s.efternavn) + '</span></div></div>';
       } else if (aktiv && r === aktivRunde) {
         html += '<div class="cell nu"><span>På uret</span></div>';
       } else {
@@ -980,7 +1010,7 @@ function tegnSpillerListe() {
     var info = s.k ? s.k + " kampe · " + s.g + " mål · " + s.a + " assists" : "Ingen kampe endnu";
     return '<li class="sp-raekke-wrap"><button type="button" class="sp-knap ' + s.pos + '" data-id="' + esc(s.id) + '"' + (raad ? "" : " disabled") + '>' +
       '<span class="tag ' + s.pos + '">' + s.pos + '</span>' +
-      '<span class="sp-navn">' + esc(fuldtNavn(s)) + '<small>' + esc(info) + (raad ? "" : ' · <span class="for-dyr">For dyr</span>') + '</small></span>' +
+      '<span class="sp-navn"><span class="navn-linje">' + troeje(s.klub, 18) + '<span>' + esc(fuldtNavn(s)) + '</span></span><small>' + esc(info) + (raad ? "" : ' · <span class="for-dyr">For dyr</span>') + '</small></span>' +
       '<span class="sp-klub">' + esc(KLUBBER[s.klub] || s.klub) + '</span>' +
       '<span class="sp-pris" title="Form 0-100">' + form(s.pris) + trendHtml(s) + '</span></button>' +
       '<button type="button" class="sp-info-knap" data-info="' + esc(s.id) + '" aria-label="Se stats for ' + esc(fuldtNavn(s)) + '">i</button></li>';
@@ -994,6 +1024,7 @@ function aabnSpillerKort(id, ejerUid) {
   $("kortFoto").textContent = initialer(s);
   $("kortKlub").textContent = KLUBBER[s.klub] || s.klub;
   $("kortNavn").textContent = fuldtNavn(s);
+  $("kortFoto").innerHTML = troeje(s.klub, 44);
   $("kortInfo").innerHTML = '<span class="tag ' + s.pos + '">' + s.pos + '</span><span class="klub">' + POSITIONER[s.pos] +
     '</span><span class="prik">·</span>Form ' + form(s.pris) + ' ' + trendHtml(s).replace("<small", "<small style=\"display:inline\"");
   $("kortSaeson").innerHTML =

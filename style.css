@@ -1036,3 +1036,33 @@ input, select, textarea { font-size: 16px !important; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ================= KUN KANTEN I POSITIONSFARVE + TRØJER ================= */
+/* Felter på boardet: neutral baggrund, positionsfarven kun som stribe i venstre kant */
+.cell.MM, .cell.FOR, .cell.MID, .cell.ANG {
+  background: #121b2b;
+  border-left: 4px solid var(--c);
+}
+.cell.MM:hover, .cell.FOR:hover, .cell.MID:hover, .cell.ANG:hover { background: #18233a; filter: none; }
+.c-lab { color: var(--daempet); }
+.c-lab::first-letter { text-transform: none; }
+
+/* Spillerlisten: samme princip */
+.sp-knap {
+  background: #0d1524;
+  border: 1px solid var(--kant);
+  border-left: 4px solid var(--c);
+}
+.sp-knap:hover { border-color: var(--kant); border-left-color: var(--c); background: #15203a; }
+
+/* Trøjen ved navnet */
+.troeje { flex-shrink: 0; display: inline-block; vertical-align: -3px; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5)); }
+.c-navn { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.c-navn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.navn-linje { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.navn-linje span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.f-spiller .troeje { vertical-align: -3px; margin-right: 2px; }
+
+/* Stort trøjebillede i "On the clock" og på spillerkortet */
+.blok.har-valg .b-foto, .kort-panel .b-foto { background: #0a1322; }
+.b-foto .troeje { filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.6)); }
