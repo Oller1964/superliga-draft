@@ -998,3 +998,19 @@ body { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area
 .tom-soeg { color: var(--daempet); font-size: 13px; padding: 4px 2px; }
 
 .intro-tekst { margin: -6px 0 18px; font-size: 14px; line-height: 1.5; }
+
+/* ================= REGLER ================= */
+.regler { margin: 0 16px 20px; }
+.regel-gitter { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.regel-kort {
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: var(--flade2);
+  border: 1px solid var(--kant);
+  min-width: 0;
+}
+.regel-kort h3 { margin: 0 0 10px; font-size: 16px; color: var(--guld); }
+.regel-kort ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: #c9d2e0; font-size: 14px; line-height: 1.5; }
+.regel-kort b { color: var(--tekst); }
+.regel-kort.fremhaevet { border-color: rgba(31, 209, 138, 0.55); background: linear-gradient(180deg, rgba(31, 209, 138, 0.10), var(--flade2)); }
+.regel-kort.fremhaevet h3 { color: var(--groen); }

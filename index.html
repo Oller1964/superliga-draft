@@ -110,6 +110,7 @@
   <nav class="hovedfaner" id="hovedfaner">
     <button type="button" data-fane="board" aria-pressed="true">Draft board</button>
     <button type="button" data-fane="stilling" aria-pressed="false">Stilling</button>
+    <button type="button" data-fane="regler" aria-pressed="false">Regler</button>
   </nav>
 
   <!-- DRAFT BOARD -->
@@ -129,15 +130,90 @@
       </table>
     </div>
     <p class="sp-hjaelp" id="stillingInfo"></p>
-    <div class="pointregler">
-      <h3>Sådan får holdene point</h3>
-      <ul>
-        <li>Spillet i kampen: 1 point. Mindst 60 minutter: 1 point mere.</li>
-        <li>Mål: 6 point for målmand og forsvar, 5 for midtbane, 4 for angreb.</li>
-        <li>Assist: 3 point.</li>
-        <li>Clean sheet (holdet lukker ikke mål ind, og spilleren spiller mindst 60 min.): 4 point for målmand og forsvar, 1 for midtbane.</li>
-        <li>Gult kort: −1. Rødt kort: −3.</li>
-      </ul>
+
+  </section>
+
+
+  <!-- REGLER -->
+  <section class="regler" id="reglerFane" hidden>
+    <div class="regel-gitter">
+      <article class="regel-kort">
+        <h3>Holdet</h3>
+        <ul>
+          <li>Hver uge drafter du et nyt hold på 7 spillere: 1 målmand, 2 forsvarere, 2 midtbanespillere og 2 angribere.</li>
+          <li>En spiller kan kun være på ét hold i ligaen. Når han er taget, er han væk for de andre.</li>
+          <li>Der er ingen budget. Du må tage lige præcis dem, du vil, så længe du har plads på positionen.</li>
+          <li>Holdet gælder kun for den uges runde. Næste uge drafter alle forfra.</li>
+        </ul>
+      </article>
+
+      <article class="regel-kort">
+        <h3>Rækkefølgen</h3>
+        <ul>
+          <li>Uge 1 trækkes rækkefølgen tilfældigt.</li>
+          <li>Derefter vælger holdet med <b>færrest point i sidste runde først</b>. Står det lige, vælger holdet med færrest point i alt først.</li>
+          <li>Draften kører som <b>snake</b>: den, der vælger først i runde 1, vælger sidst i runde 2, og så fremdeles.</li>
+        </ul>
+      </article>
+
+      <article class="regel-kort">
+        <h3>Ugedraft</h3>
+        <ul>
+          <li>Draften åbner tirsdag morgen, når sidste rundes point er regnet ud, og lukker <b>fredag kl. 18.00</b> før weekendens runde.</li>
+          <li>Tiden fordeles, så alle når at vælge inden fredag. Hvor lang tid du har pr. valg, står på uret.</li>
+          <li>Vælger du hurtigt, går turen videre med det samme, og den næste får hele sin tid.</li>
+        </ul>
+      </article>
+
+      <article class="regel-kort">
+        <h3>Live draft</h3>
+        <ul>
+          <li>Ligaens ejer sætter et tidspunkt, som I har aftalt. Alle kan trykke "Jeg er klar", og ejeren kan starte tidligere, når alle er klar.</li>
+          <li>Hver har <b>2 minutter</b> pr. valg.</li>
+          <li>Hele draften skal være færdig inden fredag kl. 18.00. Sættes der intet tidspunkt, vælges alle hold automatisk ved deadline.</li>
+        </ul>
+      </article>
+
+      <article class="regel-kort fremhaevet">
+        <h3>Hvis du misser din tur</h3>
+        <ul>
+          <li>Løber din tid ud, vælger appen automatisk for dig: <b>den spiller i bedst form, på en position du mangler</b>.</li>
+          <li>Draften går så videre til den næste. Du mister ikke dine kommende valg.</li>
+          <li>Det sker, selv om ingen har appen åben. Når nogen åbner den igen, bliver alle udløbne ture valgt med det samme.</li>
+          <li>Når et valg er lavet, kan det ikke laves om.</li>
+        </ul>
+      </article>
+
+      <article class="regel-kort">
+        <h3>Point</h3>
+        <ul>
+          <li>Spillet i kampen: 1 point. Mindst 60 minutter: 1 point mere.</li>
+          <li>Mål: 6 point for målmand og forsvar, 5 for midtbane, 4 for angreb.</li>
+          <li>Assist: 3 point.</li>
+          <li>Clean sheet (holdet lukker ikke mål ind, og spilleren spiller mindst 60 min.): 4 point for målmand og forsvar, 1 for midtbane.</li>
+          <li>Gult kort: −1. Rødt kort: −3.</li>
+          <li>Point kommer tirsdag morgen efter weekendens runde, og stillingen lægger alle uger sammen.</li>
+        </ul>
+      </article>
+
+      <article class="regel-kort">
+        <h3>Form</h3>
+        <ul>
+          <li>Tallet fra 0 til 100 ved hver spiller viser, hvor godt han har spillet i sæsonen: spilletid, mål, assists og kort.</li>
+          <li>Formen opdateres hver tirsdag og flytter sig lidt ad gangen. ▲ og ▼ viser ændringen siden sidste uge.</li>
+          <li>Tryk på "i" eller på en spiller på boardet for at se sæsontal og de seneste 5 runder.</li>
+        </ul>
+      </article>
+
+      <article class="regel-kort">
+        <h3>Ligaen</h3>
+        <ul>
+          <li>Man kommer kun ind i en liga med ligaens kode. Søg på navnet under ⇄, og skriv koden.</li>
+          <li>Nye medlemmer er med fra den næste draft, der startes.</li>
+          <li>Ejeren kan skifte koden, vælge ugedraft eller live draft og starte første uge under ⚙.</li>
+          <li>Du kan være med i flere ligaer og skifte mellem dem med ⇄.</li>
+        </ul>
+      </article>
     </div>
   </section>
 

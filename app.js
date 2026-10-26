@@ -1138,6 +1138,7 @@ $("hovedfaner").addEventListener("click", function (e) {
   $("hovedfaner").querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
   $("boardFane").hidden = b.dataset.fane !== "board";
   $("stillingFane").hidden = b.dataset.fane !== "stilling";
+  $("reglerFane").hidden = b.dataset.fane !== "regler";
 });
 
 $("adminKnap").addEventListener("click", async function () {
