@@ -1,6 +1,6 @@
 # Superliga Draft
 
-Web-app til en Superliga-liga med vennerne. Hver uge drafter alle 7 spillere (1 målmand, 2 forsvarere, 2 midtbane, 2 angribere) inden for et budget. Holdene får fantasy-point efter weekendens runde, og der er en samlet stilling for hele sæsonen. Appen kan installeres på telefonen via "Føj til hjemmeskærm".
+Web-app til en Superliga-liga med vennerne. Hver uge drafter alle 7 spillere (1 målmand, 2 forsvarere, 2 midtbane, 2 angribere). Hver spiller kan kun være på ét hold, og der er ingen budget: balancen kommer fra snake-rækkefølgen, og det dårligste hold vælger først næste uge. Holdene får fantasy-point efter weekendens runde, og der er en samlet stilling for hele sæsonen. Appen kan installeres på telefonen via "Føj til hjemmeskærm".
 
 ## Sådan er den bygget
 
@@ -8,7 +8,7 @@ Web-app til en Superliga-liga med vennerne. Hver uge drafter alle 7 spillere (1 
 | --- | --- |
 | Siden | GitHub Pages (`index.html`, `style.css`, `app.js`) |
 | Login og database | Firebase Authentication + Firestore (`firebase-config.js`, `firestore.rules`) |
-| Priser og sæsontal | `data/priser.json` |
+| Form og sæsontal | `data/priser.json` |
 | Rundernes tal | `data/runder.json` |
 | Ugentlig opdatering | `scripts/opdater.py` (køres hver tirsdag) |
 
@@ -24,7 +24,7 @@ Web-app til en Superliga-liga med vennerne. Hver uge drafter alle 7 spillere (1 
 
 Alle kan oprette deres egen liga med et unikt navn og en kode. Andre finder ligaen ved at søge på navnet og kommer kun ind med koden. Uden kode kan man se ligaens navn i søgningen, men ikke hold, picks eller stilling. Det håndhæves af `firestore.rules`. Den, der opretter en liga, er ejer, kan skifte koden og starte ugens draft under ⚙. Man kan være med i flere ligaer og skifte mellem dem med ⇄.
 
-Priser og rundetal (`data/`) er fælles for alle ligaer.
+Form og rundetal (`data/`) er fælles for alle ligaer.
 
 ## Ugentlig opdatering
 
@@ -34,7 +34,7 @@ python3 scripts/opdater.py --stats stats/ --resultater resultater.json
 
 `stats/<KLUB>.csv` har én linje pr. spiller: `navn;pos;kampe;mål;assists;gule;røde;minutter`.
 `resultater.json` er `{"FCK": 0, "AGF": 2, ...}` med mål lukket ind i rundens kampe.
-Scriptet tilføjer runden til `data/runder.json` og flytter priserne højst 0,5 mio. pr. uge.
+Scriptet tilføjer runden til `data/runder.json` og opdaterer spillernes form (vises som 0-100 i appen; feltet hedder stadig `pris` i filen og flytter sig højst 0,5 pr. uge).
 
 ## Point
 

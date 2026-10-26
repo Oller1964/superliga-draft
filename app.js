@@ -49,7 +49,8 @@ function esc(t) {
     return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
   });
 }
-function kr(x) { return (Math.round(x * 10) / 10).toFixed(1).replace(".", ",") + " mio"; }
+// Formtal 0-100 ud fra spillerens værdi (4,0-13,0) – opdateres hver tirsdag ud fra kampe, minutter, mål, assists og kort
+function form(v) { return Math.max(0, Math.min(100, Math.round((v - 4) / 9 * 100))); }
 function fuldtNavn(s) { return (s.fornavn ? s.fornavn + " " : "") + s.efternavn; }
 function initialer(s) { return ((s.fornavn ? s.fornavn[0] : "") + s.efternavn[0]).toUpperCase(); }
 
@@ -239,7 +240,8 @@ function rest(u, uid, picks) { return u.budget - brugt(uid, picks); }
 function taget(picks) { var t = {}; picks.forEach(function (p) { t[p.spillerId] = true; }); return t; }
 function maaVaelges(uid, s, picks) { return antalPos(uid, s.pos, picks) < KVOTE[s.pos]; }
 
-function harRaad(u, uid, s, picks) {
+function harRaad() { return true; }
+function harRaadGammel(u, uid, s, picks) {
   var t = taget(picks), reserve = 0;
   POS_RAEKKE.forEach(function (pos) {
     var mangler = KVOTE[pos] - antalPos(uid, pos, picks) - (pos === s.pos ? 1 : 0);
@@ -397,7 +399,7 @@ async function hentDatafiler() {
   try {
     var r = await fetch("data/priser.json?v=" + Date.now(), { cache: "no-store" });
     if (r.ok) modtagPriser(await r.json());
-  } catch (e) { $("tbOpdateret").textContent = "Priser utilgængelige"; }
+  } catch (e) { $("tbOpdateret").textContent = "Stats utilgængelige"; }
   try {
     var r2 = await fetch("data/runder.json?v=" + Date.now(), { cache: "no-store" });
     if (r2.ok) { var j = await r2.json(); D.runderListe = j.runder || []; kobRunderTilUger(); }
@@ -415,7 +417,7 @@ function modtagPriser(data) {
   D.spillere.forEach(function (s) { D.efterId[s.id] = s; });
   D.prisDato = data.opdateret;
   var dele = String(data.opdateret || "").split("-");
-  $("tbOpdateret").textContent = dele.length === 3 ? "Priser opdateret " + (+dele[2]) + "/" + (+dele[1]) : "";
+  $("tbOpdateret").textContent = dele.length === 3 ? "Stats opdateret " + (+dele[2]) + "/" + (+dele[1]) : "";
 }
 
 function abonnerPaaUge(nr) {
@@ -735,7 +737,7 @@ function tegnStatus(u, st) {
   if (sidste && D.efterId[sidste.spillerId]) {
     var s0 = D.efterId[sidste.spillerId];
     $("forrigeSpiller").innerHTML = esc(fuldtNavn(s0)) + ' <span class="tag ' + s0.pos + '">' + s0.pos + '</span>';
-    $("forrigeMgr").innerHTML = '<span>»</span> ' + esc(holdnavn(sidste.uid)) + ' · ' + kr(sidste.pris) +
+    $("forrigeMgr").innerHTML = '<span>»</span> ' + esc(holdnavn(sidste.uid)) +
       (sidste.auto ? ' <small style="color:var(--daempet);font-weight:400">(automatisk)</small>' : "");
   } else {
     $("forrigeSpiller").textContent = "Ingen endnu";
@@ -762,7 +764,7 @@ function tegnStatus(u, st) {
       "Point kommer tirsdag, når weekendens runde er spillet.";
     $("kmNavn").textContent = "Færdig";
     $("kmPick").textContent = st.total + " picks";
-    $("kmBudget").textContent = u.raekkefoelge.indexOf(MIG) !== -1 ? "Du brugte " + kr(brugt(MIG, D.picks)) : "";
+    $("kmBudget").textContent = "";
     t.textContent = "0:00"; t.className = "timer";
     $("draftKnap").disabled = true;
     return;
@@ -777,7 +779,7 @@ function tegnStatus(u, st) {
       "Venter på, at der bliver aftalt et tidspunkt.";
     $("kmNavn").textContent = holdnavn(st.uid);
     $("kmPick").textContent = "Vælger først";
-    $("kmBudget").textContent = "Budget " + kr(u.budget);
+    $("kmBudget").textContent = "1 MM · 2 FOR · 2 MID · 2 ANG";
     $("kmBudget").className = "km-budget";
     t.textContent = st.harStart ? visVarighed(st.startMs - Date.now()) : "–";
     t.className = "timer";
@@ -790,9 +792,10 @@ function tegnStatus(u, st) {
   var graense = Math.min(15 * 60000, u.sekPrPick * 250);
   $("kmNavn").textContent = holdnavn(st.uid);
   $("kmPick").textContent = "Pick " + (st.k + 1) + " af " + st.total;
-  var r = rest(u, st.uid, D.picks);
-  $("kmBudget").textContent = kr(r) + " tilbage";
-  $("kmBudget").className = "km-budget" + (r < u.budget * 0.2 ? " lav" : "");
+  var mangler = POS_RAEKKE.filter(function (p) { return antalPos(st.uid, p, D.picks) < KVOTE[p]; })
+    .map(function (p) { return (KVOTE[p] - antalPos(st.uid, p, D.picks)) + " " + p; });
+  $("kmBudget").textContent = mangler.length ? "Mangler " + mangler.join(", ") : "";
+  $("kmBudget").className = "km-budget";
   t.textContent = visVarighed(venstre);
   t.className = "timer" + (venstre < graense ? " kritisk" : "") + (venstre < Math.min(60000, graense / 3) ? " panik" : "");
 
@@ -800,7 +803,7 @@ function tegnStatus(u, st) {
     $("dinTur").hidden = false;
     if (!$("dinTurTekst").dataset.fejl) {
       $("dinTurTekst").textContent = "Vælg din spiller inden " + visTid(st.turSlut) +
-        ". Ellers vælger appen den bedste spiller, du har råd til.";
+        ". Ellers vælger appen den spiller i bedst form, du mangler.";
     }
     blok.disabled = false;
     if (valgt && !taget(D.picks)[valgt.id]) {
@@ -808,7 +811,7 @@ function tegnStatus(u, st) {
       $("blokFoto").textContent = initialer(valgt);
       $("blokNavn").textContent = fuldtNavn(valgt).toUpperCase();
       $("blokInfo").innerHTML = '<span class="tag ' + valgt.pos + '">' + valgt.pos + '</span><span class="klub">' +
-        esc(KLUBBER[valgt.klub] || valgt.klub) + '</span><span class="prik">·</span>' + kr(valgt.pris) +
+        esc(KLUBBER[valgt.klub] || valgt.klub) + '</span><span class="prik">·</span>Form ' + form(valgt.pris) +
         '<span class="prik">·</span>Tryk ✓ for at drafte';
       $("draftKnap").disabled = false;
     } else {
@@ -848,7 +851,6 @@ function tegnBoard(u, st) {
   u.raekkefoelge.forEach(function (uid, c) {
     var aktiv = !st.faerdig && !st.venter && st.kol === c;
     var mine = holdPicks(uid, D.picks);
-    var r0 = rest(u, uid, D.picks);
     var pt = ugePointForHold(u.nr, uid, D.picks);
     var m = D.medlemmer[uid];
     html += '<div class="kol' + (aktiv ? " aktiv" : "") + (uid === MIG ? " mig-kol" : "") + '"><div class="kol-top">' +
@@ -856,7 +858,6 @@ function tegnBoard(u, st) {
       '<div class="k-navn">' + esc(holdnavn(uid)) + '</div>' +
       (m && m.navn ? '<div class="k-pnavn">' + esc(m.navn) + '</div>' : "") +
       '<div class="k-tal">' + (pt !== null ? pt + '<small> point</small>' : mine.length + '<small>/' + SPILLERE_PR_HOLD + '</small>') + '</div>' +
-      '<div class="k-budget' + (r0 < u.budget * 0.2 && !st.faerdig ? " lav" : "") + '">' + kr(r0) + ' tilbage</div>' +
       '<div class="k-sub">' + (st.faerdig ? "Færdig" : aktiv ? "På uret nu" : "Valg " + (c + 1) + " i runde 1") + '</div>' +
       '<div class="k-kvote">' + POS_RAEKKE.map(function (pos) {
         var a = antalPos(uid, pos, D.picks);
@@ -870,7 +871,7 @@ function tegnBoard(u, st) {
         var rp = runde ? rundePoint(pick.spillerId, pick.pos, pick.klub, runde) : null;
         html += '<div class="cell klik ' + pick.pos + '" data-spiller="' + esc(pick.spillerId) + '" data-ejer="' + esc(uid) + '" tabindex="0" role="button">' +
           '<div class="c-top"><span class="c-lab">' + esc(s.fornavn ? s.fornavn + " · " : "") + pick.pos + ' · ' + esc(pick.klub) + '</span>' +
-          (rp ? '<span class="c-point">' + (rp.point > 0 ? "+" : "") + rp.point + '</span>' : '<span class="c-pris">' + kr(pick.pris).replace(" mio", "") + '</span>') +
+          (rp ? '<span class="c-point">' + (rp.point > 0 ? "+" : "") + rp.point + '</span>' : '') +
           '</div><div class="c-navn">' + esc(s.efternavn) + '</div></div>';
       } else if (aktiv && r === aktivRunde) {
         html += '<div class="cell nu"><span>På uret</span></div>';
@@ -909,13 +910,13 @@ function tegnTicker(u, st) {
   } else if (u) punkter.push("UGE " + u.nr + " · DRAFTEN ER FÆRDIG");
   D.picks.slice(-5).reverse().forEach(function (p) {
     var s = D.efterId[p.spillerId];
-    if (s) punkter.push("DRAFTED · " + fuldtNavn(s) + " (" + s.pos + ", " + kr(p.pris) + ") » " + holdnavn(p.uid));
+    if (s) punkter.push("DRAFTED · " + fuldtNavn(s) + " (" + s.pos + ") » " + holdnavn(p.uid));
   });
   var top = stilling()[0];
   if (top && top.total > 0) punkter.push("FØRER LIGAEN · " + holdnavn(top.uid) + " med " + top.total + " point");
   D.spillere.filter(function (s) { return s.forrige != null && s.pris > s.forrige; })
     .sort(function (a, b) { return (b.pris - b.forrige) - (a.pris - a.forrige); }).slice(0, 3)
-    .forEach(function (s) { punkter.push("PRISSTIGNING · " + fuldtNavn(s) + " ▲ " + kr(s.pris)); });
+    .forEach(function (s) { punkter.push("I FORM · " + fuldtNavn(s) + " ▲ " + form(s.pris)); });
   punkter.push(Object.keys(D.medlemmer).length + " hold i ligaen");
   var html = punkter.map(function (p) { return "<span>" + esc(p) + "</span>"; }).join("");
   $("ticker").innerHTML = html + html;
@@ -929,7 +930,7 @@ function aabnVaelger() {
   if (!u) return;
   var st = ugeStatus(u, D.picks, Date.now());
   if (st.faerdig || st.venter || st.uid !== MIG) return;
-  $("vaelgFor").textContent = "Dit valg · " + kr(rest(u, MIG, D.picks)) + " tilbage";
+  $("vaelgFor").textContent = "Dit valg";
   $("soeg").value = "";
   if (filterPos !== "ALLE" && antalPos(MIG, filterPos, D.picks) >= KVOTE[filterPos]) filterPos = "ALLE";
   tegnFilter();
@@ -955,9 +956,9 @@ function tegnFilter() {
 }
 
 function trendHtml(s) {
-  if (s.forrige == null || s.forrige === s.pris) return "<small>uændret</small>";
-  var d = s.pris - s.forrige;
-  return '<small class="' + (d > 0 ? "op" : "ned") + '">' + (d > 0 ? "▲ +" : "▼ ") + kr(d).replace(" mio", "") + '</small>';
+  if (s.forrige == null || form(s.forrige) === form(s.pris)) return "<small>form</small>";
+  var d = form(s.pris) - form(s.forrige);
+  return '<small class="' + (d > 0 ? "op" : "ned") + '">form ' + (d > 0 ? "▲ +" : "▼ ") + d + '</small>';
 }
 
 function tegnSpillerListe() {
@@ -981,7 +982,7 @@ function tegnSpillerListe() {
       '<span class="tag ' + s.pos + '">' + s.pos + '</span>' +
       '<span class="sp-navn">' + esc(fuldtNavn(s)) + '<small>' + esc(info) + (raad ? "" : ' · <span class="for-dyr">For dyr</span>') + '</small></span>' +
       '<span class="sp-klub">' + esc(KLUBBER[s.klub] || s.klub) + '</span>' +
-      '<span class="sp-pris">' + kr(s.pris) + trendHtml(s) + '</span></button>' +
+      '<span class="sp-pris" title="Form 0-100">' + form(s.pris) + trendHtml(s) + '</span></button>' +
       '<button type="button" class="sp-info-knap" data-info="' + esc(s.id) + '" aria-label="Se stats for ' + esc(fuldtNavn(s)) + '">i</button></li>';
   }).join("") + (liste.length > 150 ? '<li class="tom-tekst">Søg for at se flere spillere.</li>' : "");
 }
@@ -994,7 +995,7 @@ function aabnSpillerKort(id, ejerUid) {
   $("kortKlub").textContent = KLUBBER[s.klub] || s.klub;
   $("kortNavn").textContent = fuldtNavn(s);
   $("kortInfo").innerHTML = '<span class="tag ' + s.pos + '">' + s.pos + '</span><span class="klub">' + POSITIONER[s.pos] +
-    '</span><span class="prik">·</span>' + kr(s.pris) + ' ' + trendHtml(s).replace("<small", "<small style=\"display:inline\"");
+    '</span><span class="prik">·</span>Form ' + form(s.pris) + ' ' + trendHtml(s).replace("<small", "<small style=\"display:inline\"");
   $("kortSaeson").innerHTML =
     '<div><b>' + s.k + '</b><span>kampe i sæsonen</span></div>' +
     '<div><b>' + s.g + '</b><span>mål</span></div>' +
