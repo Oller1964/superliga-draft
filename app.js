@@ -650,7 +650,7 @@ function planlaegTegning() {
 function tegnAlt() {
   $("login").hidden = !!MIG;
   $("logUdKnap").hidden = !MIG;
-  if (!MIG) { $("ligaer").hidden = true; document.title = "Superliga Draft"; return; }
+  if (!MIG) { $("ligaer").hidden = true; document.title = "Superliga Draft – fantasy-draft for Superligaen"; return; }
 
   // Ingen liga åben: vis liga-vælgeren
   if (!LIGA) {

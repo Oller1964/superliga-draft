@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://oller1964.github.io/superliga-draft/sitemap.xml

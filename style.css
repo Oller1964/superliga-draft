@@ -996,3 +996,5 @@ body { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area
 .tilmeld-navn { margin: 0 0 12px; font-weight: 700; color: var(--guld); }
 .kode-visning { font-weight: 700; font-size: 16px; }
 .tom-soeg { color: var(--daempet); font-size: 13px; padding: 4px 2px; }
+
+.intro-tekst { margin: -6px 0 18px; font-size: 14px; line-height: 1.5; }
