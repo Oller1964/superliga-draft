@@ -623,7 +623,7 @@ $("tilmeldForm").addEventListener("submit", async function (e) {
   $("tilmeldKnap").disabled = true;
   try {
     await db.doc("ligaer/" + valgtLiga.id + "/medlemmer/" + MIG).set({
-      holdnavn: hold, navn: MIT_NAVN, kode: kode, tilmeldt: new Date().toISOString()
+      holdnavn: hold, kode: kode, tilmeldt: new Date().toISOString()
     });
     MINE_LIGAER = MINE_LIGAER.filter(function (l) { return l.id !== valgtLiga.id; }).concat([{ id: valgtLiga.id, navn: valgtLiga.navn }]);
     aabnLiga(valgtLiga.id);
@@ -649,7 +649,7 @@ $("opretFane").addEventListener("submit", async function (e) {
     var batch = db.batch();
     batch.set(db.doc("ligaer/" + id), { navn: navn, navnSoeg: id, ejer: MIG, drafttype: "uge", oprettet: new Date().toISOString() });
     batch.set(db.doc("ligaer/" + id + "/privat/kode"), { kode: kode });
-    batch.set(db.doc("ligaer/" + id + "/medlemmer/" + MIG), { holdnavn: hold, navn: MIT_NAVN, kode: kode, tilmeldt: new Date().toISOString() });
+    batch.set(db.doc("ligaer/" + id + "/medlemmer/" + MIG), { holdnavn: hold, kode: kode, tilmeldt: new Date().toISOString() });
     await batch.commit();
     MINE_LIGAER = MINE_LIGAER.concat([{ id: id, navn: navn }]);
     aabnLiga(id);
@@ -886,7 +886,6 @@ function tegnBoard(u, st) {
     html += '<div class="kol' + (aktiv ? " aktiv" : "") + (uid === MIG ? " mig-kol" : "") + '"><div class="kol-top">' +
       (uid === MIG ? '<div class="k-mig">Dit hold</div>' : "") +
       '<div class="k-navn">' + esc(holdnavn(uid)) + '</div>' +
-      (m && m.navn ? '<div class="k-pnavn">' + esc(m.navn) + '</div>' : "") +
       '<div class="k-tal">' + (pt !== null ? pt + '<small> point</small>' : mine.length + '<small>/' + SPILLERE_PR_HOLD + '</small>') + '</div>' +
       '<div class="k-sub">' + (st.faerdig ? "Færdig" : aktiv ? "På uret nu" : "Valg " + (c + 1) + " i runde 1") + '</div>' +
       '<div class="k-kvote">' + POS_RAEKKE.map(function (pos) {
@@ -919,7 +918,7 @@ function tegnStilling() {
   $("stillingBody").innerHTML = raekker.map(function (r, i) {
     var m = D.medlemmer[r.uid];
     return '<tr' + (r.uid === MIG ? ' class="mig-raekke"' : "") + '><td class="plads">' + (i + 1) + '</td>' +
-      '<td><div class="hold-navn">' + esc(holdnavn(r.uid)) + (m && m.navn ? '<small>' + esc(m.navn) + '</small>' : "") + '</div></td>' +
+      '<td><div class="hold-navn">' + esc(holdnavn(r.uid)) + '</div></td>' +
       '<td class="tal">' + (r.sidste === null ? "–" : r.sidste) + '</td>' +
       '<td class="tal">' + r.runder + '</td>' +
       '<td class="tal point">' + r.total + '</td></tr>';
@@ -1060,7 +1059,7 @@ function tegnAdmin() {
   $("medlemAntal").textContent = ids.length;
   $("medlemListe").innerHTML = ids.map(function (uid) {
     var m = D.medlemmer[uid];
-    return '<li><span>' + esc(m.holdnavn) + '</span><small>' + esc(m.navn || "") + '</small></li>';
+    return '<li><span>' + esc(m.holdnavn) + '</span>' + (uid === MIG ? '<small>Dig</small>' : "") + '</li>';
   }).join("") || '<li><small>Ingen endnu.</small></li>';
 
   var type = draftform();

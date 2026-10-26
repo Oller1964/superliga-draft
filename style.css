@@ -1066,3 +1066,21 @@ input, select, textarea { font-size: 16px !important; }
 /* Stort trøjebillede i "On the clock" og på spillerkortet */
 .blok.har-valg .b-foto, .kort-panel .b-foto { background: #0a1322; }
 .b-foto .troeje { filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.6)); }
+
+/* ================= POSITIONSFARVE: KANT DER TONER UD ================= */
+.cell.MM, .cell.FOR, .cell.MID, .cell.ANG {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--c) 32%, #121b2b) 0%,
+    color-mix(in srgb, var(--c) 10%, #121b2b) 22%,
+    #121b2b 50%);
+  border-left: 4px solid var(--c);
+}
+.cell.MM:hover, .cell.FOR:hover, .cell.MID:hover, .cell.ANG:hover { background: linear-gradient(90deg, color-mix(in srgb, var(--c) 40%, #18233a) 0%, #18233a 55%); }
+.sp-knap {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--c) 26%, #0d1524) 0%,
+    color-mix(in srgb, var(--c) 8%, #0d1524) 18%,
+    #0d1524 40%);
+  border-left: 4px solid var(--c);
+}
+.sp-knap:hover { background: linear-gradient(90deg, color-mix(in srgb, var(--c) 34%, #15203a) 0%, #15203a 45%); }
