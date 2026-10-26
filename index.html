@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Superliga Draft</title>
+  <meta name="description" content="Opret din egen Superliga-liga, inviter vennerne med en kode, og draft nye spillere hver uge. Fantasy-point efter hver runde og stilling hele sæsonen.">
+  <meta property="og:title" content="Superliga Draft">
+  <meta property="og:description" content="Opret din egen Superliga-liga, inviter vennerne med en kode, og draft nye spillere hver uge.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#0b111c">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="ikon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="ikon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Superliga Draft">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="tb-venstre">
+      <span class="logo"></span>
+      <span class="titel" id="tbTitel">Superliga Draft</span>
+      <span class="liga" id="tbUge">Uge –</span>
+      <span class="tb-pick" id="tbPick">0/0</span>
+      <span class="tb-bar"><span id="tbBar" style="width:0%"></span></span>
+      <span class="tb-deadline" id="tbDeadline"></span>
+    </div>
+    <div class="tb-hoejre">
+      <span class="tb-opdateret" id="tbOpdateret">Henter priser…</span>
+      <span class="pill live"><i></i>LIVE</span>
+      <button class="ikon" id="skiftLigaKnap" aria-label="Skift liga" title="Skift liga">⇄</button>
+      <button class="ikon" id="adminKnap" aria-label="Ligaindstillinger" title="Ligaindstillinger" hidden>⚙</button>
+      <span class="mig" id="migChip"></span>
+      <button class="ikon" id="logUdKnap" aria-label="Log ud" title="Log ud" hidden>⎋</button>
+    </div>
+  </header>
+
+  <!-- DIN TUR -->
+  <div class="din-tur" id="dinTur" hidden>
+    <strong>Det er din tur.</strong> <span id="dinTurTekst"></span>
+  </div>
+
+  <!-- LIVE DRAFT: VENTER PÅ START -->
+  <div class="live-lobby" id="liveLobby" hidden>
+    <div>
+      <strong id="lobbyTitel">Live draft</strong>
+      <span id="lobbyTekst"></span>
+      <div class="klar-liste" id="klarListe"></div>
+    </div>
+    <div class="knap-raekke">
+      <button type="button" class="sp-start lille" id="klarKnap">Jeg er klar</button>
+      <button type="button" class="tilfoej" id="lobbyStartNu" hidden>Start nu</button>
+    </div>
+  </div>
+
+  <!-- STATUS-RÆKKE -->
+  <section class="status">
+    <div class="forrige">
+      <div class="f-label">Forrige pick</div>
+      <div class="f-spiller" id="forrigeSpiller">Ingen endnu</div>
+      <div class="f-mgr" id="forrigeMgr"></div>
+    </div>
+
+    <button type="button" class="blok" id="blok" disabled>
+      <div class="b-foto" id="blokFoto">?</div>
+      <div class="b-tekst">
+        <div class="b-label"><span class="diamant"></span>On the clock</div>
+        <div class="b-navn" id="blokNavn">VENTER PÅ DRAFT</div>
+        <div class="b-info" id="blokInfo">Henter ligaen…</div>
+      </div>
+    </button>
+
+    <div class="kontrol">
+      <div class="k-mgr">
+        <div class="km-navn" id="kmNavn">–</div>
+        <div class="km-pick" id="kmPick"></div>
+        <div class="km-budget" id="kmBudget"></div>
+      </div>
+      <div class="timer" id="timer">–</div>
+      <button class="bekraeft" id="draftKnap" aria-label="Draft spiller" title="Draft spilleren" disabled>✓</button>
+    </div>
+  </section>
+
+  <!-- FANER -->
+  <nav class="hovedfaner" id="hovedfaner">
+    <button type="button" data-fane="board" aria-pressed="true">Draft board</button>
+    <button type="button" data-fane="stilling" aria-pressed="false">Stilling</button>
+  </nav>
+
+  <!-- DRAFT BOARD -->
+  <div class="board-rul" id="boardFane">
+    <section class="board" id="board"></section>
+    <p class="status-besked" id="boardTom" hidden></p>
+  </div>
+
+  <!-- STILLING -->
+  <section class="stilling" id="stillingFane" hidden>
+    <div class="tabel-rul">
+      <table class="stilling-tabel">
+        <thead>
+          <tr><th>#</th><th>Hold</th><th class="tal">Sidste runde</th><th class="tal">Runder</th><th class="tal">Point</th></tr>
+        </thead>
+        <tbody id="stillingBody"></tbody>
+      </table>
+    </div>
+    <p class="sp-hjaelp" id="stillingInfo"></p>
+    <div class="pointregler">
+      <h3>Sådan får holdene point</h3>
+      <ul>
+        <li>Spillet i kampen: 1 point. Mindst 60 minutter: 1 point mere.</li>
+        <li>Mål: 6 point for målmand og forsvar, 5 for midtbane, 4 for angreb.</li>
+        <li>Assist: 3 point.</li>
+        <li>Clean sheet (holdet lukker ikke mål ind, og spilleren spiller mindst 60 min.): 4 point for målmand og forsvar, 1 for midtbane.</li>
+        <li>Gult kort: −1. Rødt kort: −3.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- TICKER -->
+  <footer class="ticker">
+    <span class="t-live">LIVE</span>
+    <div class="t-spor">
+      <div class="t-flyt" id="ticker"></div>
+    </div>
+  </footer>
+</div>
+
+
+<!-- LOG IND -->
+<div class="setup" id="login" hidden>
+  <form class="setup-panel" id="loginForm" autocomplete="on">
+    <div class="sp-hoved">
+      <div class="b-label"><span class="diamant"></span>Superliga Draft</div>
+      <h1 class="sp-titel" id="loginTitel">Log ind</h1>
+    </div>
+    <button type="button" class="google-knap" id="googleKnap">
+      <span class="g-ikon" aria-hidden="true">G</span> Fortsæt med Google
+    </button>
+    <div class="eller"><span>eller med e-mail</span></div>
+    <label class="sp-felt">
+      <span class="sp-label">E-mail</span>
+      <input id="emailInput" type="email" autocomplete="email" required>
+    </label>
+    <label class="sp-felt">
+      <span class="sp-label">Kodeord</span>
+      <input id="kodeInput" type="password" autocomplete="current-password" minlength="6" required>
+    </label>
+    <p class="sp-fejl" id="loginFejl" role="alert"></p>
+    <button type="submit" class="sp-start" id="loginKnap">Log ind</button>
+    <div class="login-links">
+      <button type="button" class="sp-link" id="skiftLogin">Har du ikke en konto? Opret en</button>
+      <button type="button" class="sp-link" id="glemtKode">Glemt kodeord?</button>
+    </div>
+  </form>
+</div>
+
+<!-- LIGAER -->
+<div class="setup" id="ligaer" hidden>
+  <div class="setup-panel liga-panel" role="dialog" aria-labelledby="ligaerTitel">
+    <div class="vp-hoved">
+      <div>
+        <div class="b-label"><span class="diamant"></span>Superliga Draft</div>
+        <h1 class="sp-titel" id="ligaerTitel">Dine ligaer</h1>
+      </div>
+      <button type="button" class="ikon" id="lukLigaer" aria-label="Luk" hidden>×</button>
+    </div>
+
+    <ul class="liga-liste" id="mineLigaer"></ul>
+
+    <div class="faner liga-faner" id="ligaFaner">
+      <button type="button" data-fane="find" aria-pressed="true">Find en liga</button>
+      <button type="button" data-fane="opret" aria-pressed="false">Opret ny liga</button>
+    </div>
+
+    <div id="findFane">
+      <label class="sp-felt">
+        <span class="sp-label">Søg på ligaens navn</span>
+        <input id="ligaSoeg" type="search" placeholder="Fx Vennernes Liga" autocomplete="off">
+      </label>
+      <ul class="liga-liste" id="soegResultater"></ul>
+      <form id="tilmeldForm" class="tilmeld-boks" hidden autocomplete="off">
+        <p class="tilmeld-navn" id="tilmeldNavn"></p>
+        <label class="sp-felt">
+          <span class="sp-label">Ligaens kode</span>
+          <input id="tilmeldKode" type="text" maxlength="20" autocomplete="off" required>
+        </label>
+        <label class="sp-felt">
+          <span class="sp-label">Dit holdnavn</span>
+          <input id="tilmeldHold" type="text" maxlength="22" required>
+        </label>
+        <button type="submit" class="sp-start" id="tilmeldKnap">Gå med i ligaen</button>
+      </form>
+    </div>
+
+    <form id="opretFane" hidden autocomplete="off">
+      <label class="sp-felt">
+        <span class="sp-label">Liganavn</span>
+        <input id="opretNavn" type="text" maxlength="30" required placeholder="Fx Vennernes Liga">
+      </label>
+      <label class="sp-felt">
+        <span class="sp-label">Kode (som dine venner skal skrive for at komme ind)</span>
+        <input id="opretKode" type="text" minlength="4" maxlength="20" required placeholder="Mindst 4 tegn">
+      </label>
+      <label class="sp-felt">
+        <span class="sp-label">Dit holdnavn</span>
+        <input id="opretHold" type="text" maxlength="22" required>
+      </label>
+      <button type="submit" class="sp-start" id="opretKnap">Opret ligaen</button>
+    </form>
+
+    <p class="sp-fejl" id="ligaFejl" role="alert"></p>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="setup" id="admin" hidden>
+  <div class="setup-panel" role="dialog" aria-labelledby="adminTitel">
+    <div class="vp-hoved">
+      <div>
+        <div class="b-label"><span class="diamant"></span>Kun for dig</div>
+        <h2 class="sp-titel" id="adminTitel">Ligaindstillinger</h2>
+      </div>
+      <button type="button" class="ikon" id="lukAdmin" aria-label="Luk">×</button>
+    </div>
+
+    <div class="sp-felt">
+      <span class="sp-label">Liganavn</span>
+      <div class="kode-visning" id="adminLiganavn"></div>
+    </div>
+    <label class="sp-felt">
+      <span class="sp-label">Kode til ligaen</span>
+      <input id="kodeInputAdmin" type="text" minlength="4" maxlength="20">
+    </label>
+    <button type="button" class="tilfoej" id="gemKode">Skift kode</button>
+
+    <div class="sp-felt" style="margin-top:20px">
+      <span class="sp-label">Med i ligaen <span class="sp-antal" id="medlemAntal"></span></span>
+      <ol class="medlem-liste" id="medlemListe"></ol>
+      <p class="sp-hjaelp">Send linket til siden og koden til dine venner. De søger på ligaens navn under ⇄, skriver koden og er med fra næste draft.</p>
+      <div class="knap-raekke"><input id="delLink" type="text" readonly><button type="button" class="tilfoej" id="kopierLink">Kopiér link</button></div>
+    </div>
+
+    <div class="sp-felt">
+      <span class="sp-label">Draftform</span>
+      <div class="segment-valg" id="draftformValg">
+        <button type="button" data-type="uge" aria-pressed="true">
+          <b>Ugedraft</b><small>Vælg i løbet af ugen til fredag kl. 18</small>
+        </button>
+        <button type="button" data-type="live" aria-pressed="false">
+          <b>Live draft</b><small>Aftal et tidspunkt, 2 min. pr. valg</small>
+        </button>
+      </div>
+      <p class="sp-hjaelp" id="draftformInfo">Gælder fra næste draft, der startes.</p>
+    </div>
+
+    <div class="sp-felt" id="liveFelt" hidden>
+      <span class="sp-label">Starttidspunkt for live draft (uge <span id="liveUgeNr"></span>)</span>
+      <input id="liveStartInput" type="datetime-local">
+      <div class="knap-raekke">
+        <button type="button" class="tilfoej" id="gemLiveStart">Gem tidspunkt</button>
+        <button type="button" class="tilfoej" id="startLiveNu">Start nu</button>
+      </div>
+      <p class="sp-hjaelp" id="liveInfo"></p>
+    </div>
+
+    <div class="sp-felt">
+      <span class="sp-label">Draft</span>
+      <p class="sp-hjaelp" id="adminDraftInfo"></p>
+      <button type="button" class="sp-start" id="startUgeKnap">Start ugens draft</button>
+    </div>
+    <p class="sp-fejl" id="adminFejl" role="alert"></p>
+  </div>
+</div>
+
+<!-- VÆLG SPILLER -->
+<div class="setup" id="vaelger" hidden>
+  <div class="setup-panel vaelg-panel" role="dialog" aria-labelledby="vaelgTitel">
+    <div class="vp-hoved">
+      <div>
+        <div class="b-label"><span class="diamant"></span><span id="vaelgFor">Dit valg</span></div>
+        <h2 class="sp-titel" id="vaelgTitel">Ledige spillere</h2>
+      </div>
+      <button type="button" class="ikon" id="lukVaelger" aria-label="Luk">×</button>
+    </div>
+    <input id="soeg" type="search" placeholder="Søg navn eller klub">
+    <div class="faner" id="filter">
+      <button type="button" data-pos="ALLE" aria-pressed="true">Alle</button>
+      <button type="button" data-pos="MM" aria-pressed="false">MM</button>
+      <button type="button" data-pos="FOR" aria-pressed="false">FOR</button>
+      <button type="button" data-pos="MID" aria-pressed="false">MID</button>
+      <button type="button" data-pos="ANG" aria-pressed="false">ANG</button>
+    </div>
+    <p class="kvote-linje" id="kvoteLinje"></p>
+    <ul class="spiller-liste" id="spillerListe"></ul>
+  </div>
+</div>
+
+<!-- SPILLERKORT -->
+<div class="setup" id="spillerKort" hidden>
+  <div class="setup-panel kort-panel" role="dialog" aria-labelledby="kortNavn">
+    <div class="vp-hoved">
+      <div class="kort-hoved">
+        <div class="b-foto" id="kortFoto">?</div>
+        <div>
+          <div class="b-label"><span class="diamant"></span><span id="kortKlub"></span></div>
+          <h2 class="sp-titel" id="kortNavn"></h2>
+          <div class="b-info" id="kortInfo"></div>
+        </div>
+      </div>
+      <button type="button" class="ikon" id="lukKort" aria-label="Luk">×</button>
+    </div>
+    <div class="kort-saeson" id="kortSaeson"></div>
+    <h3 class="kort-h3">Seneste 5 runder</h3>
+    <div class="tabel-rul">
+      <table class="kort-tabel">
+        <thead><tr><th>Runde</th><th class="tal">Min.</th><th class="tal">Mål</th><th class="tal">Ass.</th><th class="tal">Kort</th><th class="tal">CS</th><th class="tal">Point</th></tr></thead>
+        <tbody id="kortRunder"></tbody>
+      </table>
+    </div>
+    <p class="sp-hjaelp" id="kortNote"></p>
+    <p class="kort-ejer" id="kortEjer"></p>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

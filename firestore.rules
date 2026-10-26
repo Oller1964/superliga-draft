@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function logget() { return request.auth != null; }
+    function ligaSti(liga) { return /databases/$(database)/documents/ligaer/$(liga); }
+    function medlem(liga) {
+      return logget() && exists(/databases/$(database)/documents/ligaer/$(liga)/medlemmer/$(request.auth.uid));
+    }
+    function ejer(liga) {
+      return logget() && get(ligaSti(liga)).data.ejer == request.auth.uid;
+    }
+
+    // Hver bruger har en liste over sine ligaer, som kun brugeren selv kan se.
+    match /brugere/{uid} {
+      allow read, write: if logget() && request.auth.uid == uid;
+    }
+
+    match /ligaer/{liga} {
+      // Alle der er logget ind kan søge og se ligaens navn – men ikke koden, holdene eller picks.
+      allow read: if logget();
+      allow create: if logget()
+        && request.resource.data.ejer == request.auth.uid
+        && request.resource.data.navnSoeg == liga;
+      allow update: if ejer(liga)
+        && request.resource.data.ejer == resource.data.ejer
+        && request.resource.data.navnSoeg == resource.data.navnSoeg;
+
+      // Koden kan kun ejeren se og ændre.
+      match /privat/kode {
+        allow read: if ejer(liga);
+        allow create: if logget() && getAfter(ligaSti(liga)).data.ejer == request.auth.uid;
+        allow update: if ejer(liga);
+      }
+
+      // Man kommer kun ind ved at skrive den rigtige kode.
+      match /medlemmer/{uid} {
+        allow read: if medlem(liga);
+        allow create: if logget() && request.auth.uid == uid
+          && request.resource.data.kode == getAfter(/databases/$(database)/documents/ligaer/$(liga)/privat/kode).data.kode;
+        allow update: if logget() && request.auth.uid == uid && request.resource.data.kode == resource.data.kode;
+        allow delete: if logget() && (request.auth.uid == uid || ejer(liga));
+      }
+
+      match /uger/{nr} {
+        allow read: if medlem(liga);
+        allow create: if medlem(liga) && request.resource.data.antalPicks == 0;
+        // Medlemmer må kun tælle picks op med én ad gangen; ejeren må sætte starttid for live draft.
+        allow update: if medlem(liga) && (
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['antalPicks'])
+            && request.resource.data.antalPicks == resource.data.antalPicks + 1)
+          || (ejer(liga) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['start']))
+        );
+
+        // Et pick kan kun skrives sammen med optællingen, og det kan aldrig ændres bagefter.
+        match /picks/{k} {
+          allow read: if medlem(liga);
+          allow create: if medlem(liga)
+            && request.resource.data.nr == int(k)
+            && getAfter(/databases/$(database)/documents/ligaer/$(liga)/uger/$(nr)).data.antalPicks == int(k) + 1;
+          allow update, delete: if false;
+        }
+
+        match /klar/{uid} {
+          allow read: if medlem(liga);
+          allow write: if medlem(liga) && request.auth.uid == uid;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Superliga Draft",
+  "short_name": "Draft",
+  "description": "Opret din egen Superliga-liga, inviter vennerne med en kode, og draft nye spillere hver uge.",
+  "lang": "da",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b111c",
+  "theme_color": "#0b111c",
+  "icons": [
+    {
+      "src": "ikon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "ikon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "ikon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,998 @@
+:root {
+  --bg: #05080e;
+  --flade: #0b111c;
+  --flade2: #111a29;
+  --kant: #1c2738;
+  --tekst: #eef2f8;
+  --daempet: #7d8aa0;
+  --guld: #f5b82e;
+  --cyan: #38c6f4;
+  --groen: #1fd18a;
+
+  /* Positionsfarver */
+  --MM: #f0a52a;
+  --FOR: #3b9bff;
+  --MID: #1fd18a;
+  --ANG: #ff4d6d;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--tekst);
+  font-family: 'Lexend', sans-serif;
+  font-size: 14px;
+}
+
+button { font-family: inherit; color: inherit; cursor: pointer; }
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(56, 198, 244, 0.07), transparent),
+    var(--flade);
+}
+
+/* ================= TOPBAR ================= */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  background: #080d16;
+  border-bottom: 1px solid var(--kant);
+}
+
+.tb-venstre, .tb-hoejre { display: flex; align-items: center; gap: 12px; }
+
+.logo {
+  width: 18px;
+  height: 18px;
+  background: var(--cyan);
+  transform: rotate(45deg);
+  border-radius: 3px;
+  box-shadow: 0 0 14px rgba(56, 198, 244, 0.6);
+}
+
+.titel { font-weight: 700; font-size: 18px; }
+.liga { color: var(--daempet); }
+
+.tb-runde { font-weight: 600; color: var(--daempet); font-size: 16px; }
+.tb-pick { color: var(--daempet); font-size: 13px; }
+
+.tb-bar {
+  width: 90px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--kant);
+  overflow: hidden;
+}
+.tb-bar span { display: block; height: 100%; background: var(--guld); border-radius: 3px; }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border: 1px solid var(--kant);
+  border-radius: 6px;
+}
+.pill.live { color: var(--groen); }
+.pill.live i {
+  width: 7px; height: 7px;
+  background: var(--groen);
+  transform: rotate(45deg);
+  animation: blink 1.4s infinite;
+}
+@keyframes blink { 50% { opacity: 0.3; } }
+
+.ikon {
+  width: 32px; height: 32px;
+  border: 1px solid var(--kant);
+  background: transparent;
+  border-radius: 6px;
+  color: var(--daempet);
+  font-size: 15px;
+}
+.ikon:hover { color: var(--tekst); border-color: var(--daempet); }
+
+.avatar {
+  width: 34px; height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #2b3c58, #1a2638);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* ================= STATUS-RÆKKE ================= */
+.status {
+  display: grid;
+  grid-template-columns: 240px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+}
+
+.forrige {
+  padding: 12px 14px;
+  background: var(--flade2);
+  border: 1px solid var(--kant);
+  border-radius: 10px;
+}
+.f-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--daempet); }
+.f-spiller { font-weight: 600; font-size: 15px; margin: 6px 0 4px; }
+.f-mgr { color: var(--guld); font-weight: 600; }
+.f-mgr span { margin-right: 4px; }
+
+.blok {
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: min(100%, 460px);
+  padding: 10px 26px 10px 10px;
+  background: linear-gradient(180deg, #142036, #0e1828);
+  border: 1px solid #22324c;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.b-foto {
+  width: 76px; height: 76px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 26px;
+  color: var(--FOR);
+  background:
+    radial-gradient(circle at 50% 30%, rgba(59, 155, 255, 0.35), transparent 70%),
+    #0a1322;
+  border: 1px solid #22324c;
+}
+
+.b-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--guld);
+}
+.diamant { width: 7px; height: 7px; background: var(--guld); transform: rotate(45deg); }
+
+.b-navn {
+  font-weight: 800;
+  font-size: 32px;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+  margin: 2px 0 4px;
+}
+
+.b-info { display: flex; align-items: center; gap: 8px; color: var(--daempet); font-size: 13px; }
+.b-info .klub { color: var(--tekst); font-weight: 600; }
+.prik { opacity: 0.5; }
+
+.tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--c);
+  background: color-mix(in srgb, var(--c) 18%, transparent);
+}
+.tag.MM { --c: var(--MM); }
+.tag.FOR { --c: var(--FOR); }
+.tag.MID { --c: var(--MID); }
+.tag.ANG { --c: var(--ANG); }
+
+.kontrol { display: flex; align-items: stretch; gap: 8px; }
+
+.k-mgr, .timer, .bekraeft {
+  border-radius: 10px;
+  border: 1px solid var(--kant);
+  background: var(--flade2);
+}
+
+.k-mgr {
+  padding: 10px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+.km-navn { font-weight: 800; font-size: 22px; color: var(--guld); }
+.km-pick { font-size: 12px; color: var(--daempet); }
+
+.timer {
+  display: grid;
+  place-items: center;
+  padding: 0 22px;
+  min-width: 140px;
+  font-weight: 700;
+  font-size: 46px;
+  font-variant-numeric: tabular-nums;
+  color: var(--cyan);
+  background: linear-gradient(180deg, #0e2233, #0a1824);
+  border-color: #17405a;
+  text-shadow: 0 0 20px rgba(56, 198, 244, 0.45);
+}
+
+.bekraeft {
+  width: 74px;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--groen);
+  background: linear-gradient(180deg, #0f2e22, #0a1f18);
+  border-color: #1a5a40;
+  transition: filter 0.15s;
+}
+.bekraeft:hover { filter: brightness(1.3); }
+
+/* ================= DRAFT BOARD ================= */
+.board {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(140px, 1fr));
+  margin: 0 16px;
+  border: 1px solid var(--kant);
+  border-radius: 10px 10px 0 0;
+  overflow-x: auto;
+  background: #070c15;
+}
+
+.kol {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0 3px 6px;
+  border-right: 1px solid var(--kant);
+}
+.kol:last-child { border-right: none; }
+
+.kol.aktiv {
+  background: rgba(245, 184, 46, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(245, 184, 46, 0.55);
+}
+
+.kol-top {
+  padding: 10px 6px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--kant);
+  margin: 0 -3px 3px;
+  background: #0b1220;
+}
+.kol.aktiv .kol-top {
+  background: linear-gradient(180deg, rgba(245, 184, 46, 0.28), rgba(245, 184, 46, 0.08));
+}
+
+.k-navn { font-weight: 600; font-size: 15px; }
+.kol.aktiv .k-navn { color: var(--guld); }
+
+.k-tal { font-weight: 800; font-size: 24px; line-height: 1.2; }
+.k-tal small { font-size: 12px; font-weight: 500; color: var(--daempet); }
+.k-sub { font-size: 11px; color: var(--daempet); }
+.kol.aktiv .k-sub { color: var(--guld); }
+
+/* ---------- Felter ---------- */
+.cell {
+  height: 50px;
+  padding: 5px 8px;
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cell.MM, .cell.FOR, .cell.MID, .cell.ANG {
+  border-left: 3px solid var(--c);
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--c) 30%, #0b111c),
+    color-mix(in srgb, var(--c) 12%, #0b111c));
+}
+.cell.MM { --c: var(--MM); }
+.cell.FOR { --c: var(--FOR); }
+.cell.MID { --c: var(--MID); }
+.cell.ANG { --c: var(--ANG); }
+
+.c-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.c-lab {
+  font-size: 11px;
+  color: color-mix(in srgb, var(--c) 70%, white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.c-club { font-size: 11px; font-weight: 700; color: rgba(255, 255, 255, 0.75); }
+
+.c-navn {
+  font-weight: 700;
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Spilleren der er "on the clock" – svagt vist */
+.cell.ghost {
+  opacity: 0.45;
+  border-left-style: dashed;
+  animation: ghost 1.6s ease-in-out infinite;
+}
+@keyframes ghost { 50% { opacity: 0.7; } }
+
+/* Tomme felter */
+.cell.tom {
+  background: rgba(255, 255, 255, 0.015);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+.cell.tom span { color: #2a3549; font-weight: 600; font-size: 14px; }
+
+/* ================= TICKER ================= */
+.ticker {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  height: 36px;
+  margin: 0 16px;
+  background: #080d16;
+  border: 1px solid var(--kant);
+  border-top-color: #22324c;
+  overflow: hidden;
+}
+
+.t-live {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 14px;
+  background: var(--guld);
+  color: #120c00;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.t-live::before { content: "◆"; margin-right: 6px; font-size: 10px; }
+
+.t-spor { flex: 1; overflow: hidden; }
+
+.t-flyt {
+  display: flex;
+  width: max-content;
+  animation: rul 40s linear infinite;
+}
+.t-flyt span {
+  padding: 0 22px;
+  border-right: 1px solid var(--kant);
+  white-space: nowrap;
+  color: #c9d2e0;
+}
+
+@keyframes rul { to { transform: translateX(-50%); } }
+
+/* ================= MOBIL ================= */
+@media (max-width: 1000px) {
+  .status { grid-template-columns: 1fr; }
+  .blok { justify-self: stretch; }
+  .kontrol { justify-content: center; }
+  .liga, .tb-runde, .tb-pick, .tb-bar { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; }
+}
+
+/* ================= OPSÆTNING ================= */
+.setup {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(3, 6, 11, 0.82);
+  backdrop-filter: blur(6px);
+  overflow-y: auto;
+}
+.setup[hidden] { display: none; }
+
+.setup-panel {
+  width: 100%;
+  max-width: 520px;
+  padding: 26px;
+  background: linear-gradient(180deg, #142036, #0c1525);
+  border: 1px solid #22324c;
+  border-radius: 14px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+.sp-hoved { margin-bottom: 20px; }
+.sp-titel { margin: 4px 0 0; font-size: 30px; font-weight: 800; }
+
+.sp-felt { display: block; margin-bottom: 20px; }
+.sp-label { display: block; font-size: 13px; font-weight: 600; color: var(--daempet); margin-bottom: 8px; }
+.sp-antal { color: var(--guld); margin-left: 4px; }
+
+.sp-raekke { display: flex; justify-content: space-between; align-items: baseline; }
+
+.sp-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cyan);
+}
+.sp-link:hover { text-decoration: underline; }
+
+.setup input {
+  width: 100%;
+  padding: 11px 12px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--tekst);
+  background: #0a1220;
+  border: 1px solid var(--kant);
+  border-radius: 8px;
+  outline: none;
+}
+.setup input:focus { border-color: var(--guld); }
+
+.mgr-liste { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
+
+.mgr-raekke { display: flex; align-items: center; gap: 8px; }
+
+.mgr-nr {
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--guld);
+  background: rgba(245, 184, 46, 0.12);
+}
+
+.mgr-fjern {
+  flex-shrink: 0;
+  width: 36px; height: 40px;
+  border: 1px solid var(--kant);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--daempet);
+  font-size: 18px;
+}
+.mgr-fjern:hover:not(:disabled) { color: var(--ANG); border-color: var(--ANG); }
+.mgr-fjern:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.tilfoej {
+  width: 100%;
+  padding: 10px;
+  border: 1px dashed #2c3d58;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--daempet);
+  font-weight: 600;
+}
+.tilfoej:hover:not(:disabled) { color: var(--tekst); border-color: var(--daempet); }
+.tilfoej:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--kant);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.stepper button {
+  width: 44px; height: 42px;
+  border: none;
+  background: #0a1220;
+  font-size: 20px;
+  color: var(--guld);
+}
+.stepper button:hover { background: #111c2e; }
+.stepper span {
+  min-width: 56px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-fejl { color: var(--ANG); font-size: 13px; min-height: 1em; margin: 0 0 10px; }
+
+.sp-start {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #120c00;
+  background: linear-gradient(180deg, #ffc94d, var(--guld));
+  box-shadow: 0 8px 30px rgba(245, 184, 46, 0.3);
+}
+.sp-start:hover { filter: brightness(1.08); }
+
+/* "På uret"-felt når der endnu ikke er valgt nogen */
+.cell.nu {
+  border: 1px dashed rgba(245, 184, 46, 0.7);
+  background: rgba(245, 184, 46, 0.08);
+  align-items: center;
+  animation: ghost 1.6s ease-in-out infinite;
+}
+.cell.nu span { color: var(--guld); font-size: 12px; font-weight: 600; }
+
+:focus-visible { outline: 2px solid var(--guld); outline-offset: 2px; }
+
+/* ================= DRAFT: VALG + TIMER ================= */
+button.blok {
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+button.blok:hover:not(:disabled) { border-color: var(--guld); transform: translateY(-1px); }
+button.blok:disabled { cursor: default; }
+
+.blok.har-valg .b-foto { color: var(--c); background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--c) 35%, transparent), transparent 70%), #0a1322; }
+.blok.MM { --c: var(--MM); }
+.blok.FOR { --c: var(--FOR); }
+.blok.MID { --c: var(--MID); }
+.blok.ANG { --c: var(--ANG); }
+
+.timer { transition: color 0.3s, border-color 0.3s; }
+.timer.kritisk {
+  color: var(--ANG);
+  border-color: #5a1a28;
+  background: linear-gradient(180deg, #2a0d15, #1a0910);
+  text-shadow: 0 0 20px rgba(255, 77, 109, 0.5);
+}
+.timer.panik { animation: tik 1s steps(2) infinite; }
+@keyframes tik { 50% { opacity: 0.55; } }
+
+.bekraeft:disabled { filter: grayscale(1); opacity: 0.4; cursor: not-allowed; }
+.ikon:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* Nyt felt på boardet blinker kort */
+.cell.ny { animation: nyCelle 0.9s ease; }
+@keyframes nyCelle {
+  0% { transform: scale(1.06); filter: brightness(1.8); }
+  100% { transform: none; filter: none; }
+}
+
+/* ---------- Spillervælger ---------- */
+.vaelg-panel {
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 40px);
+}
+
+.vp-hoved {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.faner { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
+.faner button {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid var(--kant);
+  background: #0a1220;
+  color: var(--daempet);
+}
+.faner button[aria-pressed="true"] { color: #120c00; background: var(--guld); border-color: var(--guld); }
+
+.spiller-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  display: grid;
+  gap: 4px;
+}
+
+.sp-knap {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  text-align: left;
+  border: 1px solid transparent;
+  border-left: 3px solid var(--c);
+  border-radius: 6px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--c) 18%, #0b111c), #0b111c 70%);
+}
+.sp-knap:hover { border-color: var(--c); }
+.sp-knap.MM { --c: var(--MM); }
+.sp-knap.FOR { --c: var(--FOR); }
+.sp-knap.MID { --c: var(--MID); }
+.sp-knap.ANG { --c: var(--ANG); }
+
+.sp-knap .tag { justify-self: start; }
+.sp-navn { font-weight: 700; font-size: 15px; }
+.sp-navn small { display: block; font-weight: 400; font-size: 12px; color: var(--daempet); }
+.sp-klub { font-size: 12px; font-weight: 700; color: rgba(255, 255, 255, 0.7); }
+
+.tom-tekst { color: var(--daempet); padding: 14px 4px; }
+
+/* ================= HOLDREGEL ================= */
+.sp-hjaelp { margin: 8px 0 0; font-size: 13px; color: var(--daempet); }
+
+.kvote-linje { margin: 0 0 10px; font-size: 13px; color: var(--guld); }
+
+.faner button:disabled,
+.faner button.fuld {
+  opacity: 0.35;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.k-kvote {
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.k-kvote span {
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--c);
+  background: color-mix(in srgb, var(--c) 14%, transparent);
+}
+.k-kvote span.fuld { color: #0b111c; background: var(--c); }
+.k-kvote .MM { --c: var(--MM); }
+.k-kvote .FOR { --c: var(--FOR); }
+.k-kvote .MID { --c: var(--MID); }
+.k-kvote .ANG { --c: var(--ANG); }
+
+/* ================= HOSTET VERSION: BUDGET + PRISER ================= */
+:root { color-scheme: dark; }
+html, body { background: var(--bg); }
+
+.board-rul { margin: 0 16px; overflow-x: auto; min-width: 0; }
+.board-rul .board { margin: 0; min-width: 100%; }
+
+.tb-opdateret { font-size: 12px; color: var(--daempet); }
+
+.km-budget { margin-top: 4px; font-size: 12px; font-weight: 600; color: var(--groen); font-variant-numeric: tabular-nums; }
+.km-budget.lav { color: var(--ANG); }
+
+.k-budget { font-size: 12px; font-weight: 600; color: var(--groen); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.k-budget.lav { color: var(--ANG); }
+
+.c-pris { font-size: 11px; font-weight: 700; color: rgba(255, 255, 255, 0.85); font-variant-numeric: tabular-nums; }
+
+.budget-boks {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #0a1220;
+  border: 1px solid var(--kant);
+}
+.budget-tal { font-size: 26px; font-weight: 800; color: var(--guld); font-variant-numeric: tabular-nums; }
+
+.sp-start:disabled { filter: grayscale(1); opacity: 0.5; cursor: not-allowed; }
+
+/* Pris og trend i spillervælgeren */
+.sp-knap { grid-template-columns: 48px 1fr auto auto; }
+.sp-pris {
+  min-width: 64px;
+  text-align: right;
+  font-weight: 800;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.sp-pris small { display: block; font-size: 11px; font-weight: 600; color: var(--daempet); }
+.sp-pris .op { color: var(--groen); }
+.sp-pris .ned { color: var(--ANG); }
+
+.sp-knap:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+  filter: grayscale(0.6);
+}
+.sp-knap:disabled:hover { border-color: transparent; }
+.for-dyr { font-size: 11px; color: var(--ANG); font-weight: 600; }
+
+.status-besked {
+  margin: 40px auto;
+  max-width: 420px;
+  text-align: center;
+  color: var(--daempet);
+  line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+  .sp-knap { grid-template-columns: 44px 1fr auto; }
+  .sp-knap .sp-klub { display: none; }
+  .tb-opdateret { display: none; }
+}
+
+/* ================= LIGA ================= */
+.tb-deadline {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--guld);
+  padding: 3px 8px;
+  border: 1px solid rgba(245, 184, 46, 0.4);
+  border-radius: 6px;
+}
+.tb-deadline:empty { display: none; }
+
+.mig {
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #2b3c58, #1a2638);
+}
+.mig:empty { display: none; }
+
+.din-tur {
+  margin: 12px 16px 0;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(31, 209, 138, 0.22), rgba(31, 209, 138, 0.06));
+  border: 1px solid rgba(31, 209, 138, 0.6);
+  color: var(--tekst);
+  animation: ghost 2s ease-in-out infinite;
+}
+.din-tur strong { color: var(--groen); }
+
+.hovedfaner { display: flex; gap: 6px; margin: 0 16px 10px; }
+.hovedfaner button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--kant);
+  background: var(--flade2);
+  color: var(--daempet);
+  font-weight: 600;
+}
+.hovedfaner button[aria-pressed="true"] { color: #120c00; background: var(--guld); border-color: var(--guld); }
+
+.kol.mig-kol .kol-top { box-shadow: inset 0 -3px 0 var(--cyan); }
+.k-mig { font-size: 10px; font-weight: 700; color: var(--cyan); letter-spacing: 1px; text-transform: uppercase; }
+.k-pnavn { font-size: 11px; color: var(--daempet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.cell.klik { cursor: pointer; }
+.cell.klik:hover { filter: brightness(1.25); }
+.c-point {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+/* Stilling */
+.stilling { margin: 0 16px 20px; display: grid; gap: 14px; }
+.tabel-rul { overflow-x: auto; }
+.stilling-tabel, .kort-tabel {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.stilling-tabel th, .kort-tabel th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--daempet);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--kant);
+}
+.stilling-tabel td, .kort-tabel td { padding: 10px; border-bottom: 1px solid var(--kant); }
+.stilling-tabel .tal, .kort-tabel .tal { text-align: right; }
+.stilling-tabel tr.mig-raekke td { background: rgba(56, 198, 244, 0.08); }
+.stilling-tabel .plads { font-weight: 800; color: var(--guld); width: 36px; }
+.stilling-tabel .point { font-weight: 800; font-size: 16px; }
+.hold-navn { font-weight: 700; }
+.hold-navn small { display: block; font-weight: 400; font-size: 12px; color: var(--daempet); }
+
+.pointregler {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--flade2);
+  border: 1px solid var(--kant);
+}
+.pointregler h3 { margin: 0 0 8px; font-size: 15px; }
+.pointregler ul { margin: 0; padding-left: 18px; color: #c9d2e0; display: grid; gap: 4px; font-size: 13px; }
+
+/* Medlemmer */
+.medlem-liste { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 4px; }
+.medlem-liste li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #0a1220;
+  font-size: 14px;
+}
+.medlem-liste small { color: var(--daempet); }
+
+/* Spillerkort */
+.kort-panel { max-width: 560px; max-height: calc(100vh - 40px); overflow-y: auto; }
+.kort-hoved { display: flex; gap: 14px; align-items: center; min-width: 0; }
+.kort-hoved .b-foto { flex-shrink: 0; }
+.kort-panel.MM { --c: var(--MM); } .kort-panel.FOR { --c: var(--FOR); }
+.kort-panel.MID { --c: var(--MID); } .kort-panel.ANG { --c: var(--ANG); }
+.kort-panel .b-foto { color: var(--c); }
+.kort-saeson {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 4px 0 18px;
+}
+.kort-saeson div {
+  padding: 10px;
+  border-radius: 8px;
+  background: #0a1220;
+  border: 1px solid var(--kant);
+}
+.kort-saeson b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+.kort-saeson span { font-size: 11px; color: var(--daempet); }
+.kort-h3 { margin: 0 0 6px; font-size: 15px; }
+.kort-tabel .point { font-weight: 800; color: var(--guld); }
+.kort-ejer { margin: 12px 0 0; font-size: 13px; color: var(--cyan); }
+.kort-ejer:empty { display: none; }
+.sp-info-knap {
+  width: 30px; height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--kant);
+  background: transparent;
+  color: var(--daempet);
+  font-weight: 700;
+}
+.sp-info-knap:hover { color: var(--tekst); border-color: var(--daempet); }
+.sp-raekke-wrap { display: flex; gap: 6px; align-items: stretch; }
+.sp-raekke-wrap .sp-knap { flex: 1; min-width: 0; }
+
+@media (max-width: 600px) {
+  .kort-saeson { grid-template-columns: repeat(2, 1fr); }
+  .tb-deadline { display: none; }
+}
+
+[hidden] { display: none !important; }
+
+/* ================= LIVE DRAFT ================= */
+.segment-valg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.segment-valg button {
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--kant);
+  background: #0a1220;
+  color: var(--tekst);
+}
+.segment-valg button b { display: block; font-size: 14px; }
+.segment-valg button small { display: block; font-size: 12px; color: var(--daempet); margin-top: 2px; }
+.segment-valg button[aria-pressed="true"] { border-color: var(--guld); box-shadow: inset 0 0 0 1px var(--guld); }
+.segment-valg button[aria-pressed="true"] b { color: var(--guld); }
+
+.knap-raekke { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.knap-raekke .tilfoej { width: auto; flex: 1; }
+
+.live-lobby {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 12px 16px 0;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(245, 184, 46, 0.18), rgba(245, 184, 46, 0.04));
+  border: 1px solid rgba(245, 184, 46, 0.55);
+}
+.live-lobby strong { color: var(--guld); margin-right: 6px; }
+.klar-liste { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.klar-liste span {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--kant);
+  color: var(--daempet);
+}
+.klar-liste span.klar { color: #04150b; background: var(--groen); border-color: var(--groen); }
+.sp-start.lille { width: auto; padding: 10px 18px; font-size: 14px; }
+.live-lobby .knap-raekke { margin-top: 0; }
+
+@media (max-width: 600px) {
+  .segment-valg { grid-template-columns: 1fr; }
+}
+
+/* ================= WEB-APP ================= */
+body { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.google-knap {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 13px; border-radius: 10px;
+  border: 1px solid var(--kant); background: #fff; color: #1f1f1f;
+  font-weight: 600; font-size: 15px;
+}
+.google-knap:hover { filter: brightness(0.95); }
+.g-ikon { font-weight: 800; color: #4285f4; font-size: 18px; }
+.eller { display: flex; align-items: center; gap: 10px; margin: 18px 0; color: var(--daempet); font-size: 12px; }
+.eller::before, .eller::after { content: ""; flex: 1; height: 1px; background: var(--kant); }
+.login-links { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+#delLink { flex: 2; min-width: 0; }
+
+/* ================= MOBIL ================= */
+.status > * { min-width: 0; }
+@media (max-width: 600px) {
+  .topbar { padding: 10px 12px; gap: 8px; }
+  .titel { font-size: 16px; }
+  .mig { max-width: 110px; }
+  .blok { min-width: 0; width: 100%; padding: 10px 12px 10px 10px; gap: 12px; }
+  .b-foto { width: 56px; height: 56px; font-size: 20px; flex-shrink: 0; }
+  .b-tekst { min-width: 0; }
+  .b-navn { font-size: 22px; overflow-wrap: anywhere; }
+  .b-info { flex-wrap: wrap; }
+  .kontrol { width: 100%; }
+  .k-mgr { flex: 1; min-width: 0; padding: 8px 10px; }
+  .km-navn { font-size: 17px; overflow-wrap: anywhere; }
+  .timer { flex: 1; min-width: 0; padding: 0 10px; font-size: 30px; }
+  .bekraeft { width: 58px; flex-shrink: 0; }
+  .status { padding: 12px 16px; }
+}
+@media (max-width: 600px) {
+  .pill.live { display: none; }
+  .tb-venstre { min-width: 0; }
+  .tb-hoejre { gap: 6px; flex-shrink: 0; }
+  .ikon { width: 30px; height: 30px; }
+}
+
+/* ================= FLERE LIGAER ================= */
+.liga-panel { max-width: 520px; max-height: calc(100vh - 40px); overflow-y: auto; }
+.liga-liste { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 6px; }
+.liga-liste:empty { display: none; }
+.liga-knap {
+  width: 100%;
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding: 12px 14px; border-radius: 8px;
+  border: 1px solid var(--kant); background: #0a1220; color: var(--tekst);
+  text-align: left;
+}
+.liga-knap:hover, .liga-knap[aria-pressed="true"] { border-color: var(--guld); }
+.liga-knap b { font-size: 15px; }
+.liga-knap small { color: var(--daempet); font-size: 12px; }
+.liga-knap .pil { color: var(--guld); font-weight: 800; }
+.liga-faner { margin: 6px 0 14px; }
+.tilmeld-boks { padding: 14px; border-radius: 10px; border: 1px solid rgba(245, 184, 46, 0.5); background: rgba(245, 184, 46, 0.06); }
+.tilmeld-navn { margin: 0 0 12px; font-weight: 700; color: var(--guld); }
+.kode-visning { font-weight: 700; font-size: 16px; }
+.tom-soeg { color: var(--daempet); font-size: 13px; padding: 4px 2px; }
