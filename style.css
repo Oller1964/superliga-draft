@@ -1014,3 +1014,25 @@ body { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area
 .regel-kort b { color: var(--tekst); }
 .regel-kort.fremhaevet { border-color: rgba(31, 209, 138, 0.55); background: linear-gradient(180deg, rgba(31, 209, 138, 0.10), var(--flade2)); }
 .regel-kort.fremhaevet h3 { color: var(--groen); }
+
+/* ================= MOBIL: INGEN SIDEVEJS GLIDNING ================= */
+/* Siden må aldrig kunne skubbes til siden; kun boardet og tickeren må rulle vandret inde i sig selv */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+.app { overflow-x: clip; }
+.board-rul { overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+.ticker { max-width: calc(100vw - 32px); }
+.stripes, .bg-lines { max-width: 100vw; }
+
+/* iPhone zoomer ind, når man trykker i et felt med skrift under 16px – det forhindrer vi */
+input, select, textarea { font-size: 16px !important; }
+
+/* Tallene på uret ændrer ikke bredde hvert sekund */
+.timer, #timer, .km-budget, .tb-pick { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
