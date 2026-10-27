@@ -1425,3 +1425,16 @@ button.blok { justify-self: stretch; min-width: 0; width: 100%; }
 .sp-klub-mobil { display: none; color: #dfe6f5; font-weight: 600; }
 @media (max-width: 600px) { .sp-klub-mobil { display: inline; } }
 .mock-intro .tilfoej { width: auto; flex-shrink: 0; padding: 8px 16px; }
+.mock-raekke { grid-template-columns: 170px repeat(3, minmax(0, 1fr)); }
+.mr-lab { flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; }
+.mr-pick { flex-shrink: 0; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 4px; background: #121f42; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1); font-weight: 800; font-size: 22px; line-height: 1; color: #dfe6f5; }
+.mr-pick small { display: block; font-weight: 600; font-size: 9.5px; letter-spacing: 1.5px; text-transform: uppercase; color: #7f8eae; margin-bottom: -10px; }
+.mr-tx { display: flex; flex-direction: column; min-width: 0; }
+.mr-lab .om { color: #8fc6ff; }
+.mock-raekke.nu .mr-pick { background: var(--guld); color: #0d1630; box-shadow: none; }
+.mock-raekke.nu .mr-pick small { color: #3a2c08; }
+@media (max-width: 700px) {
+  .mock-raekke { grid-template-columns: 1fr; }
+  .mr-lab { margin-top: 6px; }
+  .mr-pick { width: 44px; height: 44px; font-size: 19px; }
+}

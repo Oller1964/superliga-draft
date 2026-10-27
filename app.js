@@ -1181,8 +1181,13 @@ function tegnMock(u, st) {
     var bud = nu ? mockBud(r, picks) : null;
     var tog = gjort && D.efterId[gjort.spillerId];
     html += '<div class="mock-raekke' + (nu ? " nu" : "") + (gjort ? " gjort" : "") + '">' +
-      '<div class="mr-lab"><b>Valg ' + (r + 1) + '</b>' + (pickNr ? '<small>Pick ' + pickNr + '</small>' : "") +
-      (gjort ? '<small class="tog">Du tog ' + esc(tog ? tog.efternavn : gjort.spillerId) + '</small>' : nu ? '<small class="nu-tekst">' + (st.uid === MIG ? "Din tur nu" : "Dit næste valg") + '</small>' : "") + '</div>';
+      '<div class="mr-lab"><span class="mr-pick">' + (pickNr ? '<small>Pick</small>' + pickNr : '<small>Pick</small>?') + '</span>' +
+      '<span class="mr-tx"><b>Valg ' + (r + 1) + '</b>' +
+      '<small>' + (pickNr ? "Pick " + pickNr + " af " + n * SPILLERE_PR_HOLD : "Nummeret kommer, når ugens rækkefølge er klar") + '</small>' +
+      (gjort ? '<small class="tog">Du tog ' + esc(tog ? tog.efternavn : gjort.spillerId) + '</small>' :
+        nu && st.uid === MIG ? '<small class="nu-tekst">Din tur nu</small>' :
+        pickNr && st && !st.faerdig ? '<small class="om">Om ' + (pickNr - 1 - st.k) + ' pick' + (pickNr - 1 - st.k === 1 ? "" : "s") + '</small>' : "") +
+      '</span></div>';
     planRaekke(r).forEach(function (id, i) {
       var s = id && D.efterId[id];
       if (!s) {
