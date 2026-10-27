@@ -1340,6 +1340,29 @@ function tegnSpillerListe() {
   }).join("") + (liste.length > 150 ? '<li class="tom-tekst">Søg for at se flere spillere.</li>' : "");
 }
 
+// Hvor tit spilleren er blevet draftet i ligaen, og hvornår
+function draftStats(id) {
+  var uger = 0, numre = [], hold = {};
+  Object.keys(D.uger).map(Number).forEach(function (nr) {
+    var picks = picksForUge(nr);
+    if (!picks || !picks.length) return;
+    uger++;
+    picks.forEach(function (p) {
+      if (p.spillerId !== id) return;
+      numre.push(p.nr + 1);
+      hold[p.uid] = (hold[p.uid] || 0) + 1;
+    });
+  });
+  if (!uger) return null;
+  var tael = {};
+  numre.forEach(function (n) { tael[n] = (tael[n] || 0) + 1; });
+  var oftest = Object.keys(tael).map(Number).sort(function (a, b) { return tael[b] - tael[a] || a - b; })[0];
+  var topHold = Object.keys(hold).sort(function (a, b) { return hold[b] - hold[a]; })[0];
+  return { uger: uger, gange: numre.length, oftest: oftest, oftestAntal: oftest ? tael[oftest] : 0,
+    snit: numre.length ? numre.reduce(function (a, b) { return a + b; }, 0) / numre.length : null,
+    hold: topHold || null, holdAntal: topHold ? hold[topHold] : 0 };
+}
+
 function aabnSpillerKort(id, ejerUid) {
   var s = D.efterId[id];
   if (!s) return;
@@ -1370,6 +1393,16 @@ function aabnSpillerKort(id, ejerUid) {
     '<div><b>' + s.g + '</b><span>mål</span></div>' +
     '<div><b>' + s.a + '</b><span>assists</span></div>' +
     '<div><b>' + s.min + '</b><span>minutter</span></div>';
+  var ds = draftStats(s.id);
+  if (ds) {
+    $("kortDraft").innerHTML = ds.gange ?
+      '<div><b>' + ds.gange + '<small> af ' + ds.uger + '</small></b><span>uger draftet</span></div>' +
+      '<div><b>' + ds.oftest + '</b><span>oftest pick' + (ds.oftestAntal > 1 ? " (" + ds.oftestAntal + " gange)" : "") + '</span></div>' +
+      '<div><b>' + String(Math.round(ds.snit * 10) / 10).replace(".", ",") + '</b><span>pick i snit</span></div>' +
+      '<div><b class="lille">' + esc(holdnavn(ds.hold)) + '</b><span>oftest valgt af' + (ds.holdAntal > 1 ? " (" + ds.holdAntal + " gange)" : "") + '</span></div>' :
+      '<p class="kd-tom">Ingen har draftet ham endnu' + (ds.uger > 1 ? " i de " + ds.uger + " uger" : "") + '.</p>';
+    $("kortDraftBoks").hidden = false;
+  } else $("kortDraftBoks").hidden = true;
   var runder = D.runderListe.slice().sort(function (a, b) { return Date.parse(b.skrevet) - Date.parse(a.skrevet); }).slice(0, 5);
   if (runder.length) {
     $("kortRunder").innerHTML = runder.map(function (rd) {
