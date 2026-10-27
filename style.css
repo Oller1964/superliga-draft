@@ -1090,3 +1090,205 @@ input, select, textarea { font-size: 16px !important; }
 .stort-logo { display: block; width: 88px; height: 88px; margin: 0 auto 14px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
 .vp-logo { display: flex; align-items: center; gap: 12px; }
 .vp-logo img { flex-shrink: 0; }
+
+/* =====================================================================
+   NYT DESIGN: mørk marineblå med svage træårer, Barlow Condensed,
+   felter med lille skråt hjørne og positionsfarve der toner ud
+   ===================================================================== */
+:root {
+  --bg: #081228;
+  --flade: #0b1834;
+  --flade2: #14234a;
+  --kant: rgba(255, 255, 255, 0.08);
+  --tekst: #eef2fb;
+  --daempet: #94a3c2;
+  --guld: #d9ad52;
+  --cyan: #8fc6ff;
+  --groen: #55b993;
+  --MM: #c99a45;
+  --FOR: #4f86cf;
+  --MID: #3aa57d;
+  --ANG: #c95a6a;
+  --felt: #14234a;
+  --felt-skygge: 0 2px 8px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+html, body {
+  background: linear-gradient(180deg, #0b1834, #081228 70%, #060d1e) fixed;
+  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  font-size: 16px;
+}
+.app { background: transparent; position: relative; z-index: 1; }
+.trae { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 0.11; }
+button, input, select { font-family: inherit; }
+
+/* Topbjælke */
+.topbar { background: rgba(6, 12, 28, 0.7); border-bottom: 1px solid var(--kant); }
+.titel { font-weight: 700; font-size: 20px; letter-spacing: 0.3px; }
+.ikon { border-radius: 4px; background: rgba(255, 255, 255, 0.03); }
+.mig { border-radius: 4px; background: var(--felt); box-shadow: inset 0 0 0 1px var(--kant); font-weight: 600; font-size: 14px; }
+.pill { border-radius: 4px; }
+.tb-deadline { border-radius: 4px; font-weight: 600; font-size: 13px; }
+
+/* Din tur og lobby */
+.din-tur { background: rgba(85, 185, 147, 0.08); border: 1px solid rgba(85, 185, 147, 0.35); border-radius: 4px; font-weight: 500; font-size: 15px; animation: none; }
+.din-tur strong { color: var(--groen); font-weight: 700; }
+.live-lobby { border-radius: 4px; background: rgba(217, 173, 82, 0.08); border-color: rgba(217, 173, 82, 0.4); }
+
+/* Status-rækken */
+.forrige, .k-mgr, .timer, .bekraeft, button.blok {
+  background: var(--felt);
+  border: 0;
+  border-radius: 4px;
+  box-shadow: var(--felt-skygge);
+}
+.f-label { font-weight: 600; font-size: 11px; letter-spacing: 2px; }
+.f-spiller { font-weight: 600; font-size: 18px; }
+.f-mgr { font-weight: 600; font-size: 14px; color: var(--guld); }
+button.blok {
+  position: relative;
+  overflow: hidden;
+  padding: 26px 22px 14px 14px;
+  background: linear-gradient(112deg, color-mix(in srgb, var(--guld) 16%, var(--felt)) 0%, var(--felt) 45%);
+  box-shadow: 0 0 0 1px var(--guld), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+button.blok:hover:not(:disabled) { transform: none; box-shadow: 0 0 0 1.5px var(--guld), 0 2px 8px rgba(0, 0, 0, 0.35); }
+button.blok .b-label {
+  position: absolute; left: 0; top: 0;
+  padding: 3px 16px 3px 9px;
+  background: var(--guld); color: #0d1630;
+  font-weight: 800; font-size: 10px; letter-spacing: 1.6px;
+  clip-path: polygon(0 0, 100% 0, 86% 100%, 0 100%);
+}
+button.blok .b-label .diamant { display: none; }
+.b-foto { width: 62px; height: 62px; border-radius: 4px; background: #101c3d; border: 0; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1); color: #8fb0e6; font-weight: 700; font-size: 24px; }
+.b-navn { font-weight: 600; font-size: 28px; letter-spacing: 0.2px; text-transform: none; line-height: 1.05; }
+.b-info { font-weight: 500; font-size: 14px; }
+.km-navn { font-weight: 600; font-size: 22px; color: var(--guld); }
+.km-pick { font-weight: 500; font-size: 14px; }
+.km-budget { font-weight: 600; font-size: 13px; color: var(--groen); }
+.timer { font-weight: 600; font-size: 46px; color: #cfe3ff; text-shadow: none; }
+.timer.kritisk { color: var(--ANG); background: color-mix(in srgb, var(--ANG) 12%, var(--felt)); border: 0; text-shadow: none; }
+.bekraeft { color: var(--groen); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(85, 185, 147, 0.35); }
+
+/* Faner */
+.hovedfaner button { font-weight: 600; font-size: 15px; border-radius: 4px; background: var(--felt); border: 0; color: #aab7d3; box-shadow: inset 0 0 0 1px var(--kant); }
+.hovedfaner button[aria-pressed="true"] { background: var(--guld); color: #0d1630; box-shadow: none; }
+
+/* Boardet: en kolonne pr. hold */
+.board { background: transparent; border: 0; gap: 10px; }
+.kol { background: rgba(10, 20, 44, 0.55); border: 0; border-radius: 4px; padding: 8px; gap: 6px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06); }
+.kol.aktiv { background: linear-gradient(180deg, rgba(217, 173, 82, 0.10), rgba(10, 20, 44, 0.55) 40%); box-shadow: inset 0 0 0 1px var(--guld); }
+.kol-top { background: transparent; border: 0; margin: 0 0 4px; padding: 6px 4px 10px; }
+.kol.aktiv .kol-top { background: transparent; }
+.kol.mig-kol .kol-top { box-shadow: none; }
+.k-mig { color: #7fb4ff; font-weight: 700; font-size: 10px; letter-spacing: 1.6px; }
+.k-navn { font-weight: 600; font-size: 19px; }
+.k-tal { font-weight: 600; font-size: 24px; }
+.k-sub { font-weight: 500; font-size: 12px; }
+.k-kvote span { background: transparent; color: var(--c); box-shadow: inset 0 0 0 1px var(--c); border-radius: 2px; font-weight: 600; font-size: 10.5px; }
+.k-kvote span.fuld { background: var(--c); color: #0d1630; }
+
+.cell {
+  position: relative;
+  height: 64px;
+  padding: 0 10px 0 36px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--felt);
+  box-shadow: var(--felt-skygge);
+  overflow: hidden;
+}
+.cell.MM, .cell.FOR, .cell.MID, .cell.ANG {
+  border: 0;
+  background: linear-gradient(112deg,
+    color-mix(in srgb, var(--c) 26%, var(--felt)) 0%,
+    color-mix(in srgb, var(--c) 12%, var(--felt)) 18%,
+    color-mix(in srgb, var(--c) 4%, var(--felt)) 42%,
+    var(--felt) 66%);
+}
+.cell.MM:hover, .cell.FOR:hover, .cell.MID:hover, .cell.ANG:hover {
+  background: linear-gradient(112deg, color-mix(in srgb, var(--c) 34%, #1a2c5a) 0%, #1a2c5a 60%);
+}
+.c-nr {
+  position: absolute; left: 0; top: 0;
+  width: 28px; height: 20px; padding-right: 5px;
+  display: grid; place-items: center;
+  background: var(--c, #3a4a6b); color: #fff;
+  font-weight: 700; font-size: 12px; line-height: 1;
+  clip-path: polygon(0 0, 100% 0, 72% 100%, 0 100%);
+  border-top-left-radius: 4px;
+}
+.c-tr { flex-shrink: 0; display: flex; }
+.c-tr .troeje { filter: none; }
+.c-tx { flex: 1; min-width: 0; }
+.c-for { font-weight: 500; font-size: 12px; letter-spacing: 0.8px; text-transform: uppercase; color: rgba(255, 255, 255, 0.55); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cell .c-navn { display: block; font-weight: 600; font-size: 18px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c-sub { font-weight: 500; font-size: 12px; color: #8e9dbd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c-pos { display: inline-block; margin-right: 5px; padding: 0 4px; border-radius: 2px; color: var(--c); box-shadow: inset 0 0 0 1px var(--c); font-weight: 700; font-size: 11px; }
+.c-hoejre { flex-shrink: 0; text-align: right; font-weight: 600; font-size: 17px; line-height: 1; color: #dfe6f5; }
+.c-hoejre small { display: block; font-weight: 500; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #7f8eae; }
+.c-hoejre.point { color: var(--guld); }
+.cell.nu { --c: var(--guld); border: 0; background: linear-gradient(112deg, color-mix(in srgb, var(--guld) 16%, var(--felt)) 0%, var(--felt) 45%); box-shadow: 0 0 0 1px var(--guld), 0 2px 8px rgba(0, 0, 0, 0.35); animation: none; align-items: center; }
+.cell.nu .c-nr { color: #0d1630; }
+.cell.nu .c-navn { color: var(--guld); }
+.cell.tom { --c: #3a4a6b; background: #121f42; border: 0; opacity: 0.55; }
+.cell.ny { animation: nyCelle 0.9s ease; }
+
+/* Spillervælger, spillerkort, ligaer, admin */
+.setup { background: rgba(4, 8, 20, 0.78); }
+.setup-panel { background: linear-gradient(180deg, #14234a, #0e1a38); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; }
+.sp-titel { font-weight: 700; font-size: 30px; }
+.b-label { color: var(--guld); }
+.diamant { background: var(--guld); }
+.setup input { border-radius: 4px; background: #0b1630; }
+.sp-start { border-radius: 4px; background: var(--guld); color: #0d1630; font-weight: 700; font-size: 18px; box-shadow: none; }
+.tilfoej, .liga-knap, .segment-valg button, .faner button { border-radius: 4px; }
+.faner button[aria-pressed="true"] { background: var(--guld); border-color: var(--guld); color: #0d1630; }
+.sp-knap {
+  border: 0;
+  border-radius: 4px;
+  background: linear-gradient(112deg,
+    color-mix(in srgb, var(--c) 22%, var(--felt)) 0%,
+    color-mix(in srgb, var(--c) 7%, var(--felt)) 20%,
+    var(--felt) 45%);
+  box-shadow: var(--felt-skygge);
+}
+.sp-knap:hover { background: linear-gradient(112deg, color-mix(in srgb, var(--c) 30%, #1a2c5a) 0%, #1a2c5a 50%); }
+.sp-knap .tag { background: transparent; color: var(--c); box-shadow: inset 0 0 0 1px var(--c); }
+.sp-navn { font-weight: 600; font-size: 17px; }
+.sp-pris { font-weight: 600; }
+.sp-info-knap { border-radius: 4px; background: var(--felt); }
+.kort-saeson div, .budget-boks, .medlem-liste li, .pointregler, .regel-kort { background: var(--felt); border-radius: 4px; border: 0; box-shadow: var(--felt-skygge); }
+.regel-kort.fremhaevet { background: linear-gradient(180deg, rgba(85, 185, 147, 0.12), var(--felt)); box-shadow: 0 0 0 1px rgba(85, 185, 147, 0.4), 0 2px 8px rgba(0, 0, 0, 0.35); }
+.regel-kort h3 { font-weight: 700; font-size: 18px; }
+.regel-kort ul { font-size: 15px; }
+.stilling-tabel td, .stilling-tabel th { font-size: 16px; }
+.hold-navn { font-weight: 600; }
+
+/* Ticker */
+.ticker { background: rgba(6, 12, 28, 0.85); border: 1px solid var(--kant); border-radius: 4px; }
+.t-live { background: var(--guld); color: #0d1630; font-weight: 800; }
+.t-flyt span { font-weight: 500; color: #c3cde3; }
+
+@media (max-width: 600px) {
+  .b-navn { font-size: 22px; }
+  .timer { font-size: 30px; }
+  .cell .c-navn { font-size: 16px; }
+}
+/* Status-rækken fylder hele bredden */
+.status { grid-template-columns: minmax(200px, 1fr) minmax(0, 1.8fr) auto; align-items: stretch; }
+.status > .forrige { display: flex; flex-direction: column; justify-content: center; }
+button.blok { justify-self: stretch; min-width: 0; width: 100%; }
+.kontrol { align-items: stretch; }
+.k-mgr { min-width: 210px; }
+.timer { min-width: 200px; }
+@media (max-width: 1000px) { .status { grid-template-columns: 1fr; } .k-mgr { min-width: 0; } .timer { min-width: 0; } }
+@media (max-width: 600px) {
+  .board-rul { margin: 0 12px; scroll-snap-type: x mandatory; }
+  .board { grid-auto-columns: 78vw; }
+  .kol { scroll-snap-align: start; }
+}

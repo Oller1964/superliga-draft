@@ -778,7 +778,7 @@ function tegnStatus(u, st) {
   if (!u) {
     blok.disabled = true;
     $("blokFoto").textContent = "?";
-    $("blokNavn").textContent = "VENTER PÅ DRAFT";
+    $("blokNavn").textContent = "Venter på draft";
     $("blokInfo").textContent = ER_EJER ? "Åbn ⚙ og start ugens draft, når alle er med." : "Ugens draft er ikke startet endnu.";
     $("kmNavn").textContent = "–"; $("kmPick").textContent = ""; $("kmBudget").textContent = "";
     t.textContent = "–"; t.className = "timer";
@@ -789,7 +789,7 @@ function tegnStatus(u, st) {
   if (st.faerdig) {
     blok.disabled = true;
     $("blokFoto").textContent = "✓";
-    $("blokNavn").textContent = "UGENS DRAFT ER FÆRDIG";
+    $("blokNavn").textContent = "Ugens draft er færdig";
     $("blokInfo").textContent = D.runder[u.nr] ? "Point for runden er regnet ud. Se stillingen." :
       "Point kommer tirsdag, når weekendens runde er spillet.";
     $("kmNavn").textContent = "Færdig";
@@ -804,7 +804,7 @@ function tegnStatus(u, st) {
     blok.disabled = true;
     valgt = null;
     $("blokFoto").textContent = "⏱";
-    $("blokNavn").textContent = st.harStart ? "DRAFTEN STARTER SNART" : "LIVE DRAFT";
+    $("blokNavn").textContent = st.harStart ? "Draften starter snart" : "Live draft";
     $("blokInfo").textContent = st.harStart ? "Første valg: " + holdnavn(st.uid) + " · " + visTid(st.startMs) :
       "Venter på, at der bliver aftalt et tidspunkt.";
     $("kmNavn").textContent = holdnavn(st.uid);
@@ -839,7 +839,7 @@ function tegnStatus(u, st) {
     if (valgt && !taget(D.picks)[valgt.id]) {
       blok.classList.add("har-valg", valgt.pos);
       $("blokFoto").innerHTML = troeje(valgt.klub, 44);
-      $("blokNavn").textContent = fuldtNavn(valgt).toUpperCase();
+      $("blokNavn").textContent = fuldtNavn(valgt);
       $("blokInfo").innerHTML = '<span class="tag ' + valgt.pos + '">' + valgt.pos + '</span><span class="klub">' +
         esc(KLUBBER[valgt.klub] || valgt.klub) + '</span><span class="prik">·</span>Form ' + form(valgt.pris) +
         '<span class="prik">·</span>Tryk ✓ for at drafte';
@@ -847,7 +847,7 @@ function tegnStatus(u, st) {
     } else {
       valgt = null;
       $("blokFoto").textContent = "?";
-      $("blokNavn").textContent = "VÆLG DIN SPILLER";
+      $("blokNavn").textContent = "Vælg din spiller";
       $("blokInfo").textContent = "Klik her for at se de ledige spillere.";
       $("draftKnap").disabled = true;
     }
@@ -855,7 +855,7 @@ function tegnStatus(u, st) {
     blok.disabled = true;
     valgt = null;
     $("blokFoto").textContent = holdnavn(st.uid).slice(0, 2).toUpperCase();
-    $("blokNavn").textContent = holdnavn(st.uid).toUpperCase();
+    $("blokNavn").textContent = holdnavn(st.uid);
     var minPlads = naesteTurFor(u, MIG);
     $("blokInfo").textContent = "Vælger nu." + (minPlads > 0 ? " Du er på om " + minPlads + " valg." : "");
     $("draftKnap").disabled = true;
@@ -873,7 +873,7 @@ function tegnBoard(u, st) {
   }
   $("boardTom").hidden = true;
   var n = u.raekkefoelge.length;
-  board.style.gridTemplateColumns = "repeat(" + n + ", minmax(150px, 1fr))";
+  board.style.gridTemplateColumns = "repeat(" + n + ", minmax(205px, 1fr))";
   var runde = D.runder[u.nr];
   var aktivRunde = st.faerdig ? -1 : Math.floor(st.k / n);
 
@@ -887,7 +887,7 @@ function tegnBoard(u, st) {
       (uid === MIG ? '<div class="k-mig">Dit hold</div>' : "") +
       '<div class="k-navn">' + esc(holdnavn(uid)) + '</div>' +
       '<div class="k-tal">' + (pt !== null ? pt + '<small> point</small>' : mine.length + '<small>/' + SPILLERE_PR_HOLD + '</small>') + '</div>' +
-      '<div class="k-sub">' + (st.faerdig ? "Færdig" : aktiv ? "På uret nu" : "Valg " + (c + 1) + " i runde 1") + '</div>' +
+      '<div class="k-sub">' + (st.faerdig ? "Færdig" : aktiv ? "På uret nu" : (!st.venter && st.kol !== undefined && kolVed(st.k + 1, n) === c && st.k + 1 < st.total ? "Næste" : "Valg " + (c + 1) + " i runde 1")) + '</div>' +
       '<div class="k-kvote">' + POS_RAEKKE.map(function (pos) {
         var a = antalPos(uid, pos, D.picks);
         return '<span class="' + pos + (a >= KVOTE[pos] ? " fuld" : "") + '" title="' + POSITIONER[pos] + '">' + pos + " " + a + "/" + KVOTE[pos] + '</span>';
@@ -898,14 +898,20 @@ function tegnBoard(u, st) {
       if (pick) {
         var s = D.efterId[pick.spillerId] || { id: pick.spillerId, fornavn: "", efternavn: pick.spillerId, pos: pick.pos, klub: pick.klub };
         var rp = runde ? rundePoint(pick.spillerId, pick.pos, pick.klub, runde) : null;
+        var hoejre = rp ? '<div class="c-hoejre point">' + (rp.point > 0 ? "+" : "") + rp.point + '<small>point</small></div>' :
+          (D.efterId[pick.spillerId] ? '<div class="c-hoejre">' + form(s.pris) + '<small>form</small></div>' : "");
         html += '<div class="cell klik ' + pick.pos + '" data-spiller="' + esc(pick.spillerId) + '" data-ejer="' + esc(uid) + '" tabindex="0" role="button">' +
-          '<div class="c-top"><span class="c-lab">' + esc(s.fornavn ? s.fornavn + " · " : "") + pick.pos + ' · ' + esc(pick.klub) + '</span>' +
-          (rp ? '<span class="c-point">' + (rp.point > 0 ? "+" : "") + rp.point + '</span>' : '') +
-          '</div><div class="c-navn">' + troeje(pick.klub, 16) + '<span>' + esc(s.efternavn) + '</span></div></div>';
+          '<span class="c-nr">' + (r + 1) + '</span>' +
+          '<span class="c-tr">' + troeje(pick.klub, 30) + '</span>' +
+          '<div class="c-tx"><div class="c-for">' + esc(s.fornavn || "\u00a0") + '</div>' +
+          '<div class="c-navn">' + esc(s.efternavn) + '</div>' +
+          '<div class="c-sub"><span class="c-pos">' + pick.pos + '</span>' + esc(pick.klub) + (pick.auto ? ' · automatisk' : '') + '</div></div>' +
+          hoejre + '</div>';
       } else if (aktiv && r === aktivRunde) {
-        html += '<div class="cell nu"><span>På uret</span></div>';
+        html += '<div class="cell nu"><span class="c-nr">' + (r + 1) + '</span><div class="c-tx"><div class="c-for">På uret</div><div class="c-navn">' +
+          (uid === MIG ? "Din tur" : "Vælger nu") + '</div></div></div>';
       } else {
-        html += '<div class="cell tom"><span>' + (r + 1) + '</span></div>';
+        html += '<div class="cell tom"><span class="c-nr">' + (r + 1) + '</span></div>';
       }
     }
     html += '</div>';
