@@ -10,6 +10,8 @@ Web-app til en Superliga-liga med vennerne. Hver uge drafter alle 7 spillere (1 
 | Login og database | Firebase Authentication + Firestore (`firebase-config.js`, `firestore.rules`) |
 | Form og sæsontal | `data/priser.json` |
 | Rundernes tal | `data/runder.json` |
+| Ugens kampe | `data/kampe.json` |
+| Skader og karantæner | `data/skader.json` |
 | Ugentlig opdatering | `scripts/opdater.py` (køres hver tirsdag) |
 
 ## Opsætning
@@ -43,3 +45,4 @@ Scriptet tilføjer runden til `data/runder.json` og opdaterer spillernes form (v
 - Assist: 3.
 - Clean sheet (mindst 60 min.): 4 (målmand og forsvar), 1 (midtbane).
 - Gult kort −1, rødt kort −3.
+- Kaptajnen giver dobbelt point (vælges indtil fredag kl. 18).

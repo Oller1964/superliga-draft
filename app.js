@@ -7,10 +7,13 @@
 //   uger/<nr>              { nr, type, start, deadline, raekkefoelge, budget, sekPrPick, antalPicks }
 //   uger/<nr>/picks/<k>    { nr, uid, spillerId, pos, klub, pris, tid, auto }
 //   uger/<nr>/klar/<uid>   { tid }
+//   uger/<nr>/kaptajn/<uid> { spillerId, tid (servertid) }
 //
 //  Filer i repoet (opdateres hver tirsdag):
 //   data/priser.json       priser + sæsontal
 //   data/runder.json       { runder: [{ id, skrevet, spillere: {id: [min, mål, ass, gule, røde]}, modtaget: {klub: mål} }] }
+//   data/kampe.json        { opdateret, kampe: [{ hjemme, ude, tid }] }      (næste runde)
+//   data/skader.json       { opdateret, spillere: { id: { status: skadet|tvivl|karantaene, grund, retur } } }
 // =====================================================
 
 var KLUBBER = {
@@ -36,8 +39,11 @@ var MINE_LIGAER = [];       // [{ id, navn }]
 function ligaDoc(sti) { return db.doc("ligaer/" + LIGA + "/" + sti); }
 function ligaCol(sti) { return db.collection("ligaer/" + LIGA + "/" + sti); }
 var D = { spillere: [], efterId: {}, prisDato: null, info: null, infoHentet: false, medlemmer: {},
-  uger: {}, picks: [], klar: {}, runderListe: [], runder: {} };
-var aktivUgeNr = null, picksUnsub = null, klarUnsub = null, lyttere = [];
+  uger: {}, picks: [], klar: {}, runderListe: [], runder: {}, kampe: {}, kampeDato: null, skader: {}, skaderDato: null, kaptajner: {} };
+var aktivUgeNr = null, picksUnsub = null, klarUnsub = null, kaptajnUnsub = null, lyttere = [];
+var tidligereKaptajner = {};
+var kaptajnTilstand = false;
+var aabenHistorik = null;
 var valgt = null, filterPos = "ALLE";
 var tidligerePicks = {};
 var arbejder = false;
@@ -121,6 +127,31 @@ function visVarighed(ms) {
   return m + ":" + ("0" + sek).slice(-2);
 }
 
+// ---------- Ugens kampe og skader (fra data/kampe.json og data/skader.json) ----------
+var DAGE_KORT = { Mon: "man", Tue: "tirs", Wed: "ons", Thu: "tors", Fri: "fre", Sat: "lør", Sun: "søn" };
+function naesteKamp(klub) { return D.kampe[klub] || null; }
+function kampDato(ms, medTid) {
+  var d = kbhDele(ms);
+  return DAGE_KORT[d.wd] + " " + d.d + "/" + d.m + (medTid ? " kl. " + d.h + "." + ("0" + d.min).slice(-2) : "");
+}
+function kampLinje(klub) {
+  var k = naesteKamp(klub);
+  if (!k) return "";
+  return '<div class="kamp">mod <b>' + esc(k.mod) + '</b> (' + (k.hjemme ? "h" : "u") + ')' + (k.tid ? ' · ' + kampDato(k.tid) : "") + '</div>';
+}
+var SKADE_TEKST = { skadet: "✚ Skadet", tvivl: "? Tvivlsom", karantaene: "■ Karantæne" };
+function skadeFor(id) { var x = D.skader[id]; return x && SKADE_TEKST[x.status] ? x : null; }
+function skadeBadge(id) {
+  var x = skadeFor(id);
+  return x ? '<span class="skade' + (x.status === "tvivl" ? " tvivl" : "") + '" title="' + esc(x.grund || "") + '">' + SKADE_TEKST[x.status] + '</span>' : "";
+}
+function visDato(iso) {
+  var t = Date.parse(iso);
+  if (isNaN(t)) return null;
+  var d = kbhDele(t);
+  return d.d + "/" + d.m;
+}
+
 // =====================================================
 //  LOG IND
 // =====================================================
@@ -192,13 +223,40 @@ function rundePoint(spillerId, pos, klub, runde) {
   return { min: min, g: g, a: a, y: y, rd: rd, cs: cs, point: p };
 }
 
-function ugePointForHold(ugeNr, uid, picks) {
+// Kaptajnen tæller kun, hvis han blev valgt inden ugens deadline og er på holdet
+function kaptajnFor(ugeNr, uid, picks) {
+  var alle = ugeNr === aktivUgeNr ? D.kaptajner : (tidligereKaptajner[ugeNr] || {});
+  var k = alle[uid], u = D.uger[ugeNr];
+  if (!k || !u) return null;
+  var t = k.tid && k.tid.toMillis ? k.tid.toMillis() : null;
+  if (t !== null && t > Date.parse(u.deadline)) return null;
+  if (picks && !picks.some(function (p) { return p.uid === uid && p.spillerId === k.spillerId; })) return null;
+  return k.spillerId;
+}
+function spillerPoint(ugeNr, p, picks) {
   var runde = D.runder[ugeNr];
   if (!runde) return null;
+  var r = rundePoint(p.spillerId, p.pos, p.klub, runde);
+  var gange = kaptajnFor(ugeNr, p.uid, picks) === p.spillerId ? 2 : 1;
+  return { r: r, point: (r ? r.point : 0) * gange, kaptajn: gange === 2 };
+}
+function ugePointForHold(ugeNr, uid, picks) {
+  if (!D.runder[ugeNr]) return null;
   return picks.filter(function (p) { return p.uid === uid; }).reduce(function (s, p) {
-    var r = rundePoint(p.spillerId, p.pos, p.klub, runde);
-    return s + (r ? r.point : 0);
+    return s + spillerPoint(ugeNr, p, picks).point;
   }, 0);
+}
+function picksForUge(nr) { return nr === aktivUgeNr ? D.picks : tidligerePicks[nr]; }
+// Færdige uger med point, nyeste først: [{ nr, hold: [{ uid, point }] sorteret, vinder }]
+function afgjorteUger() {
+  return Object.keys(D.uger).map(Number).filter(function (nr) { return D.runder[nr] && picksForUge(nr); })
+    .sort(function (a, b) { return b - a; }).map(function (nr) {
+      var picks = picksForUge(nr);
+      var hold = (D.uger[nr].raekkefoelge || []).map(function (uid) { return { uid: uid, point: ugePointForHold(nr, uid, picks) || 0 }; })
+        .sort(function (a, b) { return b.point - a.point; });
+      var vindere = hold.filter(function (h) { return hold.length && h.point === hold[0].point; });
+      return { nr: nr, picks: picks, hold: hold, vindere: vindere };
+    });
 }
 
 // Hver runde (fra data/runder.json) hører til den første uge, hvis deadline lå før rundens tal blev skrevet
@@ -224,7 +282,7 @@ function stilling() {
   Object.keys(D.medlemmer).forEach(function (uid) { raekker[uid] = { uid: uid, total: 0, runder: 0, sidste: null }; });
   Object.keys(D.uger).map(Number).sort(function (a, b) { return a - b; }).forEach(function (nr) {
     if (!D.runder[nr]) return;
-    var picks = nr === aktivUgeNr ? D.picks : tidligerePicks[nr];
+    var picks = picksForUge(nr);
     if (!picks) return;
     (D.uger[nr].raekkefoelge || []).forEach(function (uid) {
       var p = ugePointForHold(nr, uid, picks) || 0;
@@ -286,6 +344,9 @@ function harRaadGammel(u, uid, s, picks) {
 function autoValg(u, uid, picks) {
   var t = taget(picks);
   var mulige = D.spillere.filter(function (s) { return !t[s.id] && maaVaelges(uid, s, picks); });
+  // Automatisk valg springer spillere over, der står som skadet eller i karantæne
+  var raske = mulige.filter(function (s) { var x = skadeFor(s.id); return !x || x.status === "tvivl"; });
+  if (raske.length) mulige = raske;
   var raad = mulige.filter(function (s) { return harRaad(u, uid, s, picks); });
   var liste = raad.length ? raad : mulige;
   liste.sort(function (a, b) {
@@ -434,7 +495,28 @@ async function hentDatafiler() {
     var r2 = await fetch("data/runder.json?v=" + Date.now(), { cache: "no-store" });
     if (r2.ok) { var j = await r2.json(); D.runderListe = j.runder || []; kobRunderTilUger(); }
   } catch (e) {}
+  try {
+    var r3 = await fetch("data/kampe.json?v=" + Date.now(), { cache: "no-store" });
+    if (r3.ok) modtagKampe(await r3.json());
+  } catch (e) {}
+  try {
+    var r4 = await fetch("data/skader.json?v=" + Date.now(), { cache: "no-store" });
+    if (r4.ok) { var j4 = await r4.json(); D.skader = j4.spillere || {}; D.skaderDato = j4.opdateret || null; }
+  } catch (e) {}
   planlaegTegning();
+}
+
+function modtagKampe(data) {
+  D.kampe = {};
+  var nu = Date.now();
+  // Kun kampe, der ikke er spillet endnu (med 3 timers margin), så gamle kampe forsvinder af sig selv
+  (data.kampe || []).forEach(function (k) {
+    var t = Date.parse(k.tid);
+    if (!isNaN(t) && t < nu - 3 * 3600000) return;
+    if (!D.kampe[k.hjemme]) D.kampe[k.hjemme] = { mod: k.ude, hjemme: true, tid: isNaN(t) ? null : t };
+    if (!D.kampe[k.ude]) D.kampe[k.ude] = { mod: k.hjemme, hjemme: false, tid: isNaN(t) ? null : t };
+  });
+  D.kampeDato = data.opdateret || null;
 }
 
 function modtagPriser(data) {
@@ -453,7 +535,13 @@ function modtagPriser(data) {
 function abonnerPaaUge(nr) {
   if (picksUnsub) picksUnsub();
   if (klarUnsub) klarUnsub();
-  D.picks = []; D.klar = {};
+  if (kaptajnUnsub) kaptajnUnsub();
+  D.picks = []; D.klar = {}; D.kaptajner = {}; kaptajnTilstand = false;
+  kaptajnUnsub = ligaCol("uger/" + nr + "/kaptajn").onSnapshot(function (qs) {
+    D.kaptajner = {};
+    qs.docs.forEach(function (d) { D.kaptajner[d.id] = d.data(); });
+    planlaegTegning();
+  }, function () {});
   picksUnsub = ligaCol("uger/" + nr + "/picks").onSnapshot(function (qs) {
     D.picks = qs.docs.map(function (d) { return d.data(); }).sort(function (a, b) { return a.nr - b.nr; });
     planlaegTegning();
@@ -471,6 +559,11 @@ async function hentTidligerePicks() {
     try {
       var qs = await ligaCol("uger/" + numre[i] + "/picks").get();
       tidligerePicks[numre[i]] = qs.docs.map(function (d) { return d.data(); }).sort(function (a, b) { return a.nr - b.nr; });
+    } catch (e) {}
+    try {
+      var ks = await ligaCol("uger/" + numre[i] + "/kaptajn").get();
+      tidligereKaptajner[numre[i]] = {};
+      ks.docs.forEach(function (d) { tidligereKaptajner[numre[i]][d.id] = d.data(); });
     } catch (e) {}
   }
   planlaegTegning();
@@ -517,11 +610,12 @@ function stopLyttere() {
   lyttere = [];
   if (picksUnsub) picksUnsub();
   if (klarUnsub) klarUnsub();
-  picksUnsub = klarUnsub = null;
+  if (kaptajnUnsub) kaptajnUnsub();
+  picksUnsub = klarUnsub = kaptajnUnsub = null;
   aktivUgeNr = null;
-  tidligerePicks = {};
+  tidligerePicks = {}; tidligereKaptajner = {}; kaptajnTilstand = false; aabenHistorik = null;
   valgt = null;
-  D.medlemmer = {}; D.uger = {}; D.picks = []; D.klar = {}; D.info = null; D.infoHentet = false; D.runder = {};
+  D.medlemmer = {}; D.uger = {}; D.picks = []; D.klar = {}; D.info = null; D.infoHentet = false; D.runder = {}; D.kaptajner = {};
 }
 
 // =====================================================
@@ -706,6 +800,7 @@ function tegnAlt() {
   tegnStatus(u, st);
   tegnBoard(u, st);
   tegnStilling();
+  tegnHistorik();
   tegnTicker(u, st);
   if (!$("admin").hidden) tegnAdmin();
 
@@ -862,6 +957,25 @@ function tegnStatus(u, st) {
   }
 }
 
+// ---------- Kaptajn ----------
+function kanVaelgeKaptajn(u) {
+  return !!(u && D.medlemmer[MIG] && Date.now() < Date.parse(u.deadline) && holdPicks(MIG, D.picks).length);
+}
+async function saetKaptajn(spillerId) {
+  var u = aktivUge();
+  if (!kanVaelgeKaptajn(u) || !holdPicks(MIG, D.picks).some(function (p) { return p.spillerId === spillerId; })) return;
+  var gammel = D.kaptajner[MIG];
+  D.kaptajner[MIG] = { spillerId: spillerId, tid: null };
+  kaptajnTilstand = false;
+  planlaegTegning();
+  try {
+    await ligaDoc("uger/" + u.nr + "/kaptajn/" + MIG).set({ spillerId: spillerId, tid: firebase.firestore.FieldValue.serverTimestamp() });
+  } catch (e) {
+    if (gammel) D.kaptajner[MIG] = gammel; else delete D.kaptajner[MIG];
+    planlaegTegning();
+  }
+}
+
 function tegnBoard(u, st) {
   var board = $("board");
   if (!u) {
@@ -882,7 +996,12 @@ function tegnBoard(u, st) {
     var aktiv = !st.faerdig && !st.venter && st.kol === c;
     var mine = holdPicks(uid, D.picks);
     var pt = ugePointForHold(u.nr, uid, D.picks);
-    var m = D.medlemmer[uid];
+    var kap = kaptajnFor(u.nr, uid, D.picks);
+    var kapKnap = "";
+    if (uid === MIG && kanVaelgeKaptajn(u)) {
+      kapKnap = '<button type="button" class="kap-knap' + (kaptajnTilstand ? " aktiv" : "") + '" id="kapKnap">' +
+        (kaptajnTilstand ? "Tryk på din kaptajn · annullér" : kap ? "Skift kaptajn" : "Vælg kaptajn") + '</button>';
+    }
     html += '<div class="kol' + (aktiv ? " aktiv" : "") + (uid === MIG ? " mig-kol" : "") + '"><div class="kol-top">' +
       (uid === MIG ? '<div class="k-mig">Dit hold</div>' : "") +
       '<div class="k-navn">' + esc(holdnavn(uid)) + '</div>' +
@@ -891,21 +1010,25 @@ function tegnBoard(u, st) {
       '<div class="k-kvote">' + POS_RAEKKE.map(function (pos) {
         var a = antalPos(uid, pos, D.picks);
         return '<span class="' + pos + (a >= KVOTE[pos] ? " fuld" : "") + '" title="' + POSITIONER[pos] + '">' + pos + " " + a + "/" + KVOTE[pos] + '</span>';
-      }).join("") + '</div></div>';
+      }).join("") + '</div>' + kapKnap + '</div>';
 
     for (var r = 0; r < SPILLERE_PR_HOLD; r++) {
       var pick = D.picks.filter(function (x) { return x.uid === uid && Math.floor(x.nr / n) === r; })[0];
       if (pick) {
         var s = D.efterId[pick.spillerId] || { id: pick.spillerId, fornavn: "", efternavn: pick.spillerId, pos: pick.pos, klub: pick.klub };
-        var rp = runde ? rundePoint(pick.spillerId, pick.pos, pick.klub, runde) : null;
-        var hoejre = rp ? '<div class="c-hoejre point">' + (rp.point > 0 ? "+" : "") + rp.point + '<small>point</small></div>' :
+        var sp = runde ? spillerPoint(u.nr, pick, D.picks) : null;
+        var hoejre = sp && sp.r ? '<div class="c-hoejre point">' + (sp.point > 0 ? "+" : "") + sp.point + '<small>' + (sp.kaptajn ? "point ×2" : "point") + '</small></div>' :
           (D.efterId[pick.spillerId] ? '<div class="c-hoejre">' + form(s.pris) + '<small>form</small></div>' : "");
-        html += '<div class="cell klik ' + pick.pos + '" data-spiller="' + esc(pick.spillerId) + '" data-ejer="' + esc(uid) + '" tabindex="0" role="button">' +
+        var erKap = kap === pick.spillerId;
+        var vaelgKap = kaptajnTilstand && uid === MIG;
+        html += '<div class="cell klik ' + pick.pos + (vaelgKap ? " kap-valg" : "") + '" data-spiller="' + esc(pick.spillerId) + '" data-ejer="' + esc(uid) + '" tabindex="0" role="button">' +
           '<span class="c-nr">' + (r + 1) + '</span>' +
+          (erKap ? '<span class="kaptajn" title="Kaptajn – dobbelt point">C</span>' : "") +
           '<span class="c-tr">' + troeje(pick.klub, 30) + '</span>' +
           '<div class="c-tx"><div class="c-for">' + esc(s.fornavn || "\u00a0") + '</div>' +
-          '<div class="c-navn">' + esc(s.efternavn) + '</div>' +
-          '<div class="c-sub"><span class="c-pos">' + pick.pos + '</span>' + esc(pick.klub) + (pick.auto ? ' · automatisk' : '') + '</div></div>' +
+          '<div class="c-navn">' + esc(s.efternavn) + (runde ? "" : skadeBadge(pick.spillerId)) + '</div>' +
+          '<div class="c-sub"><span class="c-pos">' + pick.pos + '</span>' + esc(pick.klub) + (pick.auto ? ' · automatisk' : '') + '</div>' +
+          (runde ? "" : kampLinje(pick.klub)) + '</div>' +
           hoejre + '</div>';
       } else if (aktiv && r === aktivRunde) {
         html += '<div class="cell nu"><span class="c-nr">' + (r + 1) + '</span><div class="c-tx"><div class="c-for">På uret</div><div class="c-navn">' +
@@ -921,10 +1044,22 @@ function tegnBoard(u, st) {
 
 function tegnStilling() {
   var raekker = stilling();
+  var uger = afgjorteUger();
+  var seneste = uger[0];
+  var sejre = {};
+  uger.forEach(function (x) { x.vindere.forEach(function (h) { sejre[h.uid] = (sejre[h.uid] || 0) + 1; }); });
+  var vinderUid = {};
+  if (seneste) seneste.vindere.forEach(function (h) { vinderUid[h.uid] = true; });
+  if (seneste && seneste.vindere.length) {
+    $("vinderBaand").innerHTML = '<span class="stor">🏆</span><div><div class="b-label">Ugens vinder · uge ' + seneste.nr + '</div>' +
+      seneste.vindere.map(function (h) { return '<b>' + esc(holdnavn(h.uid)) + '</b>'; }).join(" og ") +
+      ' med ' + seneste.vindere[0].point + ' point</div>';
+    $("vinderBaand").hidden = false;
+  } else $("vinderBaand").hidden = true;
   $("stillingBody").innerHTML = raekker.map(function (r, i) {
-    var m = D.medlemmer[r.uid];
+    var titel = sejre[r.uid] ? sejre[r.uid] + " ugesejr" + (sejre[r.uid] === 1 ? "" : "e") : "";
     return '<tr' + (r.uid === MIG ? ' class="mig-raekke"' : "") + '><td class="plads">' + (i + 1) + '</td>' +
-      '<td><div class="hold-navn">' + esc(holdnavn(r.uid)) + '</div></td>' +
+      '<td><div class="hold-navn">' + esc(holdnavn(r.uid)) + (vinderUid[r.uid] ? '<span class="trofae" title="Vandt uge ' + seneste.nr + (titel ? " · " + titel : "") + '">🏆</span>' : "") + '</div></td>' +
       '<td class="tal">' + (r.sidste === null ? "–" : r.sidste) + '</td>' +
       '<td class="tal">' + r.runder + '</td>' +
       '<td class="tal point">' + r.total + '</td></tr>';
@@ -932,6 +1067,43 @@ function tegnStilling() {
   var antalRunder = Object.keys(D.runder).length;
   $("stillingInfo").textContent = antalRunder ? antalRunder + " runde" + (antalRunder === 1 ? "" : "r") + " er talt med." :
     "Stillingen bliver regnet ud efter første runde. Point kommer hver tirsdag morgen.";
+}
+
+function tegnHistorik() {
+  var uger = afgjorteUger();
+  if (!uger.length) {
+    $("historikListe").innerHTML = "";
+    $("historikInfo").textContent = "Historikken fyldes ud, når den første runde er spillet og talt op. Point kommer hver tirsdag morgen.";
+    return;
+  }
+  $("historikInfo").textContent = "Tryk på en uge for at se hele boardet, hvem der tog hvem, og hvor mange point hver spiller gav.";
+  $("historikListe").innerHTML = uger.map(function (x) {
+    var bedste = x.picks.map(function (p) { return { p: p, sp: spillerPoint(x.nr, p, x.picks) }; })
+      .filter(function (o) { return o.sp.r && o.sp.point > 0; })
+      .sort(function (a, b) { return b.sp.point - a.sp.point; }).slice(0, 2)
+      .map(function (o) { var s = D.efterId[o.p.spillerId]; return esc(s ? s.efternavn : o.p.spillerId) + " " + o.sp.point + " point"; });
+    var aaben = aabenHistorik === x.nr;
+    var html = '<button type="button" class="hist-raekke" data-uge="' + x.nr + '" aria-expanded="' + aaben + '">' +
+      '<span class="uge">Uge ' + x.nr + '</span>' +
+      '<span class="v">' + (x.vindere.length ? "🏆 " + x.vindere.map(function (h) { return esc(holdnavn(h.uid)); }).join(" og ") : "–") +
+      '<small>' + (bedste.length ? "Bedste picks: " + bedste.join(" · ") : "Ingen point endnu") + '</small></span>' +
+      '<span class="p">' + (x.vindere.length ? x.vindere[0].point + " p" : "") + '</span>' +
+      '<span class="se">' + (aaben ? "Skjul ‹" : "Se board ›") + '</span></button>';
+    if (aaben) {
+      html += '<div class="hist-board">' + x.hold.map(function (h, i) {
+        var kap = kaptajnFor(x.nr, h.uid, x.picks);
+        return '<div class="hist-hold"><div class="hh-top"><span class="hh-plads">' + (i + 1) + '</span><b>' + esc(holdnavn(h.uid)) + '</b><span class="hh-point">' + h.point + ' p</span></div>' +
+          holdPicks(h.uid, x.picks).map(function (p) {
+            var s = D.efterId[p.spillerId] || { fornavn: "", efternavn: p.spillerId };
+            var sp = spillerPoint(x.nr, p, x.picks);
+            return '<div class="hh-spiller ' + p.pos + '"><span class="tag ' + p.pos + '">' + p.pos + '</span>' + troeje(p.klub, 16) +
+              '<span class="hh-navn">' + esc(fuldtNavn(s)) + (kap === p.spillerId ? ' <span class="kap-mini">C</span>' : "") + '</span>' +
+              '<span class="hh-p">' + (sp.point > 0 ? "+" : "") + sp.point + '</span></div>';
+          }).join("") + '</div>';
+      }).join("") + '</div>';
+    }
+    return html;
+  }).join("");
 }
 
 function tegnTicker(u, st) {
@@ -947,6 +1119,8 @@ function tegnTicker(u, st) {
     var s = D.efterId[p.spillerId];
     if (s) punkter.push("DRAFTED · " + fuldtNavn(s) + " (" + s.pos + ") » " + holdnavn(p.uid));
   });
+  var sejr = afgjorteUger()[0];
+  if (sejr && sejr.vindere.length) punkter.push("UGENS VINDER · UGE " + sejr.nr + " · " + sejr.vindere.map(function (h) { return holdnavn(h.uid); }).join(" og ") + " med " + sejr.vindere[0].point + " point");
   var top = stilling()[0];
   if (top && top.total > 0) punkter.push("FØRER LIGAEN · " + holdnavn(top.uid) + " med " + top.total + " point");
   D.spillere.filter(function (s) { return s.forrige != null && s.pris > s.forrige; })
@@ -1013,9 +1187,10 @@ function tegnSpillerListe() {
   $("spillerListe").innerHTML = liste.slice(0, 150).map(function (s) {
     var raad = harRaad(u, MIG, s, D.picks);
     var info = s.k ? s.k + " kampe · " + s.g + " mål · " + s.a + " assists" : "Ingen kampe endnu";
-    return '<li class="sp-raekke-wrap"><button type="button" class="sp-knap ' + s.pos + '" data-id="' + esc(s.id) + '"' + (raad ? "" : " disabled") + '>' +
+    var sk = skadeFor(s.id);
+    return '<li class="sp-raekke-wrap"><button type="button" class="sp-knap ' + s.pos + (sk && sk.status !== "tvivl" ? " ude" : "") + '" data-id="' + esc(s.id) + '"' + (raad ? "" : " disabled") + '>' +
       '<span class="tag ' + s.pos + '">' + s.pos + '</span>' +
-      '<span class="sp-navn"><span class="navn-linje">' + troeje(s.klub, 18) + '<span>' + esc(fuldtNavn(s)) + '</span></span><small>' + esc(info) + (raad ? "" : ' · <span class="for-dyr">For dyr</span>') + '</small></span>' +
+      '<span class="sp-navn"><span class="navn-linje">' + troeje(s.klub, 18) + '<span>' + esc(fuldtNavn(s)) + '</span>' + skadeBadge(s.id) + '</span><small>' + esc(info) + '</small>' + kampLinje(s.klub) + '</span>' +
       '<span class="sp-klub">' + esc(KLUBBER[s.klub] || s.klub) + '</span>' +
       '<span class="sp-pris" title="Form 0-100">' + form(s.pris) + trendHtml(s) + '</span></button>' +
       '<button type="button" class="sp-info-knap" data-info="' + esc(s.id) + '" aria-label="Se stats for ' + esc(fuldtNavn(s)) + '">i</button></li>';
@@ -1032,6 +1207,21 @@ function aabnSpillerKort(id, ejerUid) {
   $("kortFoto").innerHTML = troeje(s.klub, 44);
   $("kortInfo").innerHTML = '<span class="tag ' + s.pos + '">' + s.pos + '</span><span class="klub">' + POSITIONER[s.pos] +
     '</span><span class="prik">·</span>Form ' + form(s.pris) + ' ' + trendHtml(s).replace("<small", "<small style=\"display:inline\"");
+  var sk = skadeFor(s.id);
+  if (sk) {
+    var retur = sk.retur && (/^\d{4}-\d\d-\d\d/.test(sk.retur) ? visDato(sk.retur) : sk.retur);
+    $("kortStatus").innerHTML = '<b>' + SKADE_TEKST[sk.status] + '</b>' + (sk.grund ? " · " + esc(sk.grund) : "") +
+      ' · Forventet retur: ' + (retur || "ukendt") +
+      '<small>Kilde: skade- og karantænelister' + (D.skaderDato && visDato(D.skaderDato) ? ", opdateret " + visDato(D.skaderDato) : "") + '. Det er kun et fingerpeg – du kan stadig vælge ham.</small>';
+    $("kortStatus").className = "status-boks" + (sk.status === "tvivl" ? " tvivl" : "");
+    $("kortStatus").hidden = false;
+  } else $("kortStatus").hidden = true;
+  var nk = naesteKamp(s.klub);
+  if (nk) {
+    $("kortKamp").innerHTML = '<span class="lab">Næste kamp</span><span class="mod">' + troeje(nk.mod, 22) + 'mod ' + esc(KLUBBER[nk.mod] || nk.mod) +
+      ' <small>(' + (nk.hjemme ? "hjemme" : "ude") + ')</small></span><span class="tid">' + (nk.tid ? kampDato(nk.tid, true) : "") + '</span>';
+    $("kortKamp").hidden = false;
+  } else $("kortKamp").hidden = true;
   $("kortSaeson").innerHTML =
     '<div><b>' + s.k + '</b><span>kampe i sæsonen</span></div>' +
     '<div><b>' + s.g + '</b><span>mål</span></div>' +
@@ -1052,6 +1242,13 @@ function aabnSpillerKort(id, ejerUid) {
     $("kortNote").textContent = "Runderne bliver registreret hver tirsdag fra nu af. Indtil da kan du se sæsontallene ovenfor.";
   }
   $("kortEjer").textContent = ejerUid ? "Draftet af " + holdnavn(ejerUid) + " i uge " + aktivUgeNr : "";
+  var u = aktivUge();
+  var kanKap = ejerUid === MIG && kanVaelgeKaptajn(u);
+  var erKap = u && kaptajnFor(u.nr, MIG, D.picks) === s.id;
+  $("kortKaptajn").hidden = !kanKap;
+  $("kortKaptajn").disabled = !!erKap;
+  $("kortKaptajn").textContent = erKap ? "C · Han er din kaptajn" : "Gør til kaptajn (dobbelt point)";
+  $("kortKaptajn").dataset.id = s.id;
   $("spillerKort").hidden = false;
 }
 
@@ -1152,20 +1349,37 @@ $("spillerListe").addEventListener("click", function (e) {
   $("draftKnap").focus();
 });
 $("board").addEventListener("click", function (e) {
+  if (e.target.closest("#kapKnap")) { kaptajnTilstand = !kaptajnTilstand; tegnAlt(); return; }
   var c = e.target.closest(".cell.klik");
-  if (c) aabnSpillerKort(c.dataset.spiller, c.dataset.ejer);
+  if (!c) return;
+  if (kaptajnTilstand && c.dataset.ejer === MIG) { saetKaptajn(c.dataset.spiller); return; }
+  aabnSpillerKort(c.dataset.spiller, c.dataset.ejer);
 });
 $("board").addEventListener("keydown", function (e) {
   if (e.key !== "Enter" && e.key !== " ") return;
   var c = e.target.closest(".cell.klik");
-  if (c) { e.preventDefault(); aabnSpillerKort(c.dataset.spiller, c.dataset.ejer); }
+  if (!c) return;
+  e.preventDefault();
+  if (kaptajnTilstand && c.dataset.ejer === MIG) saetKaptajn(c.dataset.spiller);
+  else aabnSpillerKort(c.dataset.spiller, c.dataset.ejer);
 });
 $("lukKort").addEventListener("click", function () { $("spillerKort").hidden = true; });
+$("kortKaptajn").addEventListener("click", function () { saetKaptajn($("kortKaptajn").dataset.id); $("spillerKort").hidden = true; });
+$("historikListe").addEventListener("click", function (e) {
+  var b = e.target.closest("[data-uge]");
+  if (!b) return;
+  var nr = +b.dataset.uge;
+  aabenHistorik = aabenHistorik === nr ? null : nr;
+  tegnHistorik();
+});
 ["vaelger", "spillerKort", "admin"].forEach(function (id) {
   $(id).addEventListener("click", function (e) { if (e.target === $(id)) $(id).hidden = true; });
 });
 document.addEventListener("keydown", function (e) {
-  if (e.key === "Escape") ["vaelger", "spillerKort", "admin"].forEach(function (id) { $(id).hidden = true; });
+  if (e.key === "Escape") {
+    ["vaelger", "spillerKort", "admin"].forEach(function (id) { $(id).hidden = true; });
+    if (kaptajnTilstand) { kaptajnTilstand = false; planlaegTegning(); }
+  }
 });
 
 $("hovedfaner").addEventListener("click", function (e) {
@@ -1175,6 +1389,7 @@ $("hovedfaner").addEventListener("click", function (e) {
   $("boardFane").hidden = b.dataset.fane !== "board";
   $("stillingFane").hidden = b.dataset.fane !== "stilling";
   $("reglerFane").hidden = b.dataset.fane !== "regler";
+  $("historikFane").hidden = b.dataset.fane !== "historik";
 });
 
 $("adminKnap").addEventListener("click", async function () {

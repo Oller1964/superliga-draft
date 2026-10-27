@@ -60,6 +60,16 @@ service cloud.firestore {
           allow update, delete: if false;
         }
 
+        // Kaptajn: kun ens egen, og tiden sættes af serveren, så appen kan se, om den blev valgt før deadline.
+        match /kaptajn/{uid} {
+          allow read: if medlem(liga);
+          allow create, update: if medlem(liga) && request.auth.uid == uid
+            && request.resource.data.keys().hasOnly(['spillerId', 'tid'])
+            && request.resource.data.spillerId is string
+            && request.resource.data.tid == request.time;
+          allow delete: if false;
+        }
+
         match /klar/{uid} {
           allow read: if medlem(liga);
           allow write: if medlem(liga) && request.auth.uid == uid;

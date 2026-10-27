@@ -113,6 +113,7 @@
     <button type="button" data-fane="board" aria-pressed="true">Draft board</button>
     <button type="button" data-fane="stilling" aria-pressed="false">Stilling</button>
     <button type="button" data-fane="regler" aria-pressed="false">Regler</button>
+    <button type="button" data-fane="historik" aria-pressed="false">Historik</button>
   </nav>
 
   <!-- DRAFT BOARD -->
@@ -123,6 +124,7 @@
 
   <!-- STILLING -->
   <section class="stilling" id="stillingFane" hidden>
+    <div class="vinder-baand" id="vinderBaand" hidden></div>
     <div class="tabel-rul">
       <table class="stilling-tabel">
         <thead>
@@ -135,6 +137,12 @@
 
   </section>
 
+
+  <!-- HISTORIK -->
+  <section class="historik" id="historikFane" hidden>
+    <div class="hist" id="historikListe"></div>
+    <p class="sp-hjaelp" id="historikInfo"></p>
+  </section>
 
   <!-- REGLER -->
   <section class="regler" id="reglerFane" hidden>
@@ -195,6 +203,25 @@
           <li>Clean sheet (holdet lukker ikke mål ind, og spilleren spiller mindst 60 min.): 4 point for målmand og forsvar, 1 for midtbane.</li>
           <li>Gult kort: −1. Rødt kort: −3.</li>
           <li>Point kommer tirsdag morgen efter weekendens runde, og stillingen lægger alle uger sammen.</li>
+          <li>Holdet med flest point i ugens runde er <b>ugens vinder</b> og får 🏆 i stillingen. Alle uger kan ses under Historik.</li>
+        </ul>
+      </article>
+
+      <article class="regel-kort">
+        <h3>Kaptajn</h3>
+        <ul>
+          <li>Vælg én af dine spillere som <b>kaptajn</b>. Han giver <b>dobbelt point</b> i ugens runde – også dobbelt minus for kort.</li>
+          <li>Tryk på "Vælg kaptajn" over dit hold, og tryk så på spilleren. Du kan også gøre det fra spillerkortet.</li>
+          <li>Du kan skifte kaptajn lige så tit, du vil, indtil <b>fredag kl. 18.00</b>. Vælger du ingen, er der ingen dobbelte point.</li>
+        </ul>
+      </article>
+
+      <article class="regel-kort">
+        <h3>Kampe og skader</h3>
+        <ul>
+          <li>Ved hver spiller står ugens kamp: modstander, hjemme (h) eller ude (u) og dag.</li>
+          <li>✚ Skadet, ? Tvivlsom og ■ Karantæne opdateres tirsdag og torsdag. Karantæner kommer fra SuperStats' karantæneliste, skader fra skadelister, og et rødt kort i sidste runde giver altid karantæne.</li>
+          <li>Det er kun et fingerpeg. Du kan stadig vælge spilleren. Det automatiske valg springer skadede og karantæneramte over.</li>
         </ul>
       </article>
 
@@ -417,6 +444,8 @@
       </div>
       <button type="button" class="ikon" id="lukKort" aria-label="Luk">×</button>
     </div>
+    <div class="status-boks" id="kortStatus" hidden></div>
+    <div class="naeste-kamp" id="kortKamp" hidden></div>
     <div class="kort-saeson" id="kortSaeson"></div>
     <h3 class="kort-h3">Seneste 5 runder</h3>
     <div class="tabel-rul">
@@ -427,6 +456,7 @@
     </div>
     <p class="sp-hjaelp" id="kortNote"></p>
     <p class="kort-ejer" id="kortEjer"></p>
+    <button type="button" class="kap-knap kort-kap" id="kortKaptajn" hidden>Gør til kaptajn</button>
   </div>
 </div>
 
