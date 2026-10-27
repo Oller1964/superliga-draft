@@ -1084,3 +1084,9 @@ input, select, textarea { font-size: 16px !important; }
   border-left: 4px solid var(--c);
 }
 .sp-knap:hover { background: linear-gradient(90deg, color-mix(in srgb, var(--c) 34%, #15203a) 0%, #15203a 45%); }
+
+/* ================= LOGO ================= */
+.logo-img { display: block; height: 30px; width: auto; flex-shrink: 0; }
+.stort-logo { display: block; width: 88px; height: 88px; margin: 0 auto 14px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
+.vp-logo { display: flex; align-items: center; gap: 12px; }
+.vp-logo img { flex-shrink: 0; }

@@ -28,8 +28,9 @@
 
   <meta name="theme-color" content="#0b111c">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="ikon-192.png" type="image/png">
-  <link rel="apple-touch-icon" href="ikon-192.png">
+  <link rel="icon" href="logo.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="ikon-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Superliga Draft">
@@ -43,7 +44,7 @@
   <!-- TOPBAR -->
   <header class="topbar">
     <div class="tb-venstre">
-      <span class="logo"></span>
+      <img class="logo-img" src="logo-maerke.svg" alt="" width="40" height="34">
       <span class="titel" id="tbTitel">Superliga Draft</span>
       <span class="liga" id="tbUge">Uge –</span>
       <span class="tb-pick" id="tbPick">0/0</span>
@@ -230,6 +231,7 @@
 <!-- LOG IND -->
 <div class="setup" id="login" hidden>
   <form class="setup-panel" id="loginForm" autocomplete="on">
+    <img class="stort-logo" src="logo.svg" alt="Superliga Draft" width="88" height="88">
     <div class="sp-hoved">
       <div class="b-label"><span class="diamant"></span>Superliga Draft</div>
       <h1 class="sp-titel" id="loginTitel">Log ind</h1>
@@ -260,9 +262,12 @@
 <div class="setup" id="ligaer" hidden>
   <div class="setup-panel liga-panel" role="dialog" aria-labelledby="ligaerTitel">
     <div class="vp-hoved">
-      <div>
+      <div class="vp-logo">
+        <img src="logo-maerke.svg" alt="" width="46" height="38">
+        <div>
         <div class="b-label"><span class="diamant"></span>Superliga Draft</div>
         <h1 class="sp-titel" id="ligaerTitel">Dine ligaer</h1>
+        </div>
       </div>
       <button type="button" class="ikon" id="lukLigaer" aria-label="Luk" hidden>×</button>
     </div>
