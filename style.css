@@ -1442,3 +1442,17 @@ button.blok { justify-self: stretch; min-width: 0; width: 100%; }
 .kort-draft b.lille { font-size: 17px; line-height: 1.25; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .kort-draft .kd-tom { grid-column: 1 / -1; margin: 0; padding: 12px 14px; border-radius: 4px; background: var(--felt); color: #a9b7d6; font-weight: 500; }
 #kortDraftBoks[hidden] { display: none; }
+.kort-draft-boks { display: grid; gap: 8px; margin-bottom: 16px; }
+.kort-draft-boks .kort-saeson { margin: 0; }
+.kort-draft { grid-template-columns: repeat(3, 1fr); }
+.kort-draft b { font-size: 22px; }
+.kort-chance { --kc: var(--groen); padding: 12px 14px; border-radius: 4px; background: var(--felt); box-shadow: var(--felt-skygge); }
+.kort-chance.mellem { --kc: var(--guld); }
+.kort-chance.lav { --kc: #e48a97; }
+.kc-top { display: flex; align-items: baseline; gap: 10px; }
+.kc-top b { font-size: 30px; font-weight: 800; color: var(--kc); line-height: 1; flex-shrink: 0; }
+.kc-top span { font-weight: 500; color: #dfe6f5; }
+.kc-bar { height: 6px; margin: 8px 0 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.kc-bar i { display: block; height: 100%; background: var(--kc); border-radius: 3px; }
+.kort-chance small { display: block; color: #94a3c2; font-size: 12.5px; font-weight: 500; }
+@media (max-width: 600px) { .kort-draft { grid-template-columns: 1fr 1fr; } .kort-draft > div:last-child { grid-column: 1 / -1; } }
