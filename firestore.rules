@@ -41,9 +41,10 @@ service cloud.firestore {
         allow delete: if logget() && (request.auth.uid == uid || ejer(liga));
       }
 
-      // Mock draft: kun ejeren af planen kan se og ændre den.
+      // Mock draft: kun ejeren kan ændre den. Medlemmer kan læse den, så det automatiske valg kan bruge den.
       match /plan/{uid} {
-        allow read, write: if medlem(liga) && request.auth.uid == uid;
+        allow read: if medlem(liga);
+        allow write: if medlem(liga) && request.auth.uid == uid;
       }
 
       match /uger/{nr} {

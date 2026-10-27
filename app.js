@@ -39,7 +39,7 @@ var MINE_LIGAER = [];       // [{ id, navn }]
 function ligaDoc(sti) { return db.doc("ligaer/" + LIGA + "/" + sti); }
 function ligaCol(sti) { return db.collection("ligaer/" + LIGA + "/" + sti); }
 var D = { spillere: [], efterId: {}, prisDato: null, info: null, infoHentet: false, medlemmer: {},
-  uger: {}, picks: [], klar: {}, runderListe: [], runder: {}, kampe: {}, kampeDato: null, skader: {}, skaderDato: null, kaptajner: {}, kampeListe: [], plan: tomPlan() };
+  uger: {}, picks: [], klar: {}, runderListe: [], runder: {}, kampe: {}, kampeDato: null, skader: {}, skaderDato: null, kaptajner: {}, kampeListe: [], plan: tomPlan(), planer: {} };
 function tomPlan() { var p = []; for (var i = 0; i < SPILLERE_PR_HOLD * MOCK_ANTAL; i++) p.push(""); return p; }
 var aktivUgeNr = null, picksUnsub = null, klarUnsub = null, kaptajnUnsub = null, lyttere = [];
 var tidligereKaptajner = {};
@@ -346,6 +346,14 @@ function harRaadGammel(u, uid, s, picks) {
 
 function autoValg(u, uid, picks) {
   var t = taget(picks);
+  // Først holdets mock draft: dette valgs 1., 2. og 3. ønske, derefter ønskerne til de næste valg
+  var plan = D.planer[uid];
+  if (plan) {
+    for (var i = holdPicks(uid, picks).length * MOCK_ANTAL; i < plan.length; i++) {
+      var o = D.efterId[plan[i]];
+      if (o && !t[o.id] && maaVaelges(uid, o, picks)) return o;
+    }
+  }
   var mulige = D.spillere.filter(function (s) { return !t[s.id] && maaVaelges(uid, s, picks); });
   // Automatisk valg springer spillere over, der står som skadet eller i karantæne
   var raske = mulige.filter(function (s) { var x = skadeFor(s.id); return !x || x.status === "tvivl"; });
@@ -596,9 +604,15 @@ function startLyttere() {
     if (!D.medlemmer[MIG] && qs.docs.length) { mistetAdgang(); return; }
     planlaegTegning();
   }, mistetAdgang));
-  lyttere.push(ligaDoc("plan/" + MIG).onSnapshot(function (s) {
-    var v = s.exists && Array.isArray(s.data().valg) ? s.data().valg : [];
-    D.plan = tomPlan().map(function (x, i) { return typeof v[i] === "string" ? v[i] : ""; });
+  // Alle mock drafts hentes, så hvem som helst kan lave det automatiske valg ud fra ejerens ønsker.
+  // Appen viser kun din egen.
+  lyttere.push(ligaCol("plan").onSnapshot(function (qs) {
+    D.planer = {};
+    qs.docs.forEach(function (d) {
+      var v = Array.isArray(d.data().valg) ? d.data().valg : [];
+      D.planer[d.id] = tomPlan().map(function (x, i) { return typeof v[i] === "string" ? v[i] : ""; });
+    });
+    D.plan = D.planer[MIG] ? D.planer[MIG].slice() : tomPlan();
     planlaegTegning();
   }, function () {}));
   lyttere.push(ligaCol("uger").onSnapshot(function (qs) {
@@ -625,7 +639,7 @@ function stopLyttere() {
   aktivUgeNr = null;
   tidligerePicks = {}; tidligereKaptajner = {}; kaptajnTilstand = false; aabenHistorik = null;
   valgt = null;
-  D.medlemmer = {}; D.uger = {}; D.picks = []; D.klar = {}; D.info = null; D.infoHentet = false; D.runder = {}; D.kaptajner = {}; D.plan = tomPlan(); planSlot = null;
+  D.medlemmer = {}; D.uger = {}; D.picks = []; D.klar = {}; D.info = null; D.infoHentet = false; D.runder = {}; D.kaptajner = {}; D.plan = tomPlan(); D.planer = {}; planSlot = null;
 }
 
 // =====================================================
