@@ -1367,6 +1367,32 @@ function draftStats(id) {
     hold: topHold || null, holdAntal: topHold ? hold[topHold] : 0 };
 }
 
+// Hvor attraktiv en spiller er: hans form blandet med, hvor tidligt ligaen plejer at tage ham.
+// Jo flere færdige uger, jo mere vægt får ligaens vaner (fuld vægt efter 4 uger).
+function attraktivitet() {
+  var uger = [], hist = {};
+  Object.keys(D.uger).map(Number).forEach(function (nr) {
+    var picks = picksForUge(nr), n = (D.uger[nr].raekkefoelge || []).length;
+    if (!picks || !n || picks.length < n * SPILLERE_PR_HOLD) return;
+    uger.push(nr);
+    var total = n * SPILLERE_PR_HOLD;
+    picks.forEach(function (p) { hist[p.spillerId] = (hist[p.spillerId] || 0) + (1 - p.nr / total); });
+  });
+  var vaegt = Math.min(1, uger.length / 4) * 0.7;
+  var res = {};
+  POS_RAEKKE.forEach(function (pos) {
+    var grp = D.spillere.filter(function (x) { return x.pos === pos; }).sort(function (a, b) { return a.pris - b.pris; });
+    grp.forEach(function (x) {
+      // Spillere med samme form får samme formtal
+      var lavere = grp.filter(function (y) { return y.pris < x.pris; }).length;
+      var f = grp.length > 1 ? lavere / (grp.length - 1) : 1;
+      var h = uger.length ? (hist[x.id] || 0) / uger.length : 0;
+      res[x.id] = (1 - vaegt) * f + vaegt * h;
+    });
+  });
+  return { score: res, uger: uger.length, hist: hist };
+}
+
 // Skøn over chancen for, at spilleren stadig er ledig, når det er din tur næste gang.
 // Bygger på hans form blandt de ledige på positionen, og hvor mange af holdene før dig der mangler positionen.
 function chanceLedig(s) {
@@ -1389,7 +1415,11 @@ function chanceLedig(s) {
     var alle = SPILLERE_PR_HOLD - holdPicks(uid, D.picks).length;
     if (aaben > 0 && alle > 0) d += Math.min(aaben, foer[uid] * aaben / alle);
   });
-  var rang = 1 + D.spillere.filter(function (x) { return x.pos === s.pos && !t[x.id] && x.pris > s.pris; }).length;
+  var at = attraktivitet();
+  var mig = at.score[s.id];
+  var rang = 1 + D.spillere.filter(function (x) { return x.pos === s.pos && !t[x.id] && at.score[x.id] > mig; }).length;
+  r.ligaUger = at.uger;
+  r.populaer = at.uger ? (at.hist[s.id] || 0) / at.uger : 0;
   var spred = Math.max(0.8, Math.sqrt(d) * 0.9);
   var taget_ = d <= 0 ? 0 : 1 / (1 + Math.exp((rang - 0.5 - d) / spred));
   r.pct = Math.max(1, Math.min(99, Math.round((1 - taget_) * 100)));
@@ -1436,7 +1466,9 @@ function aabnSpillerKort(id, ejerUid) {
       (ch.om === 0 ? "Det er din tur – du kan tage ham nu." :
         "chance for, at han stadig er ledig ved dit næste pick (pick " + ch.pick + ", om " + ch.om + " pick" + (ch.om === 1 ? "" : "s") + ")") +
       '</span></div><div class="kc-bar"><i style="width:' + ch.pct + '%"></i></div>' +
-      (ch.om ? '<small>Skøn ud fra hans form og at ' + ch.foer + ' af holdene før dig stadig mangler en ' + POSITIONER[s.pos].toLowerCase() + 'spiller.</small>' : "") + '</div>';
+      (ch.om ? '<small>Skøn ud fra hans form' + (ch.ligaUger ? ", hvor tidligt I plejer at tage ham" : "") + ' og at ' + ch.foer + ' af holdene før dig stadig mangler en ' + POSITIONER[s.pos].toLowerCase() + 'spiller.' +
+        (ch.ligaUger >= 2 && ch.populaer >= 0.75 ? ' <b>Han bliver næsten altid taget tidligt i jeres liga.</b>' : ch.ligaUger >= 2 && ch.populaer >= 0.5 ? ' Han er populær i jeres liga.' : "") +
+        (ch.ligaUger && ch.ligaUger < 4 ? ' Skønnet bliver bedre, jo flere uger I spiller.' : "") + '</small>' : "") + '</div>';
   }
   if (ds && ds.gange) {
     var snit = String(Math.round(ds.snit * 10) / 10).replace(".", ",");
