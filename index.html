@@ -111,9 +111,11 @@
   <!-- FANER -->
   <nav class="hovedfaner" id="hovedfaner">
     <button type="button" data-fane="board" aria-pressed="true">Draft board</button>
+    <button type="button" data-fane="mock" aria-pressed="false">Mock draft</button>
+    <button type="button" data-fane="kampe" aria-pressed="false">Kampe</button>
     <button type="button" data-fane="stilling" aria-pressed="false">Stilling</button>
-    <button type="button" data-fane="regler" aria-pressed="false">Regler</button>
     <button type="button" data-fane="historik" aria-pressed="false">Historik</button>
+    <button type="button" data-fane="regler" aria-pressed="false">Regler</button>
   </nav>
 
   <!-- DRAFT BOARD -->
@@ -137,6 +139,21 @@
 
   </section>
 
+
+  <!-- MOCK DRAFT -->
+  <section class="mock" id="mockFane" hidden>
+    <div class="mock-intro">
+      <div><b>Din mock draft</b><p>Læg op til 3 ønsker ind for hvert af dine 7 valg. Når det er din tur, viser appen dit første ønske, der stadig er ledigt. Kun du kan se den.</p></div>
+      <button type="button" class="tilfoej" id="mockRyd">Ryd alt</button>
+    </div>
+    <div class="mock-liste" id="mockListe"></div>
+  </section>
+
+  <!-- KAMPE -->
+  <section class="kampe" id="kampeFane" hidden>
+    <div class="kampe-liste" id="kampeListe"></div>
+    <p class="sp-hjaelp" id="kampeInfo"></p>
+  </section>
 
   <!-- HISTORIK -->
   <section class="historik" id="historikFane" hidden>
@@ -426,6 +443,7 @@
       <button type="button" data-pos="ANG" aria-pressed="false">ANG</button>
     </div>
     <p class="kvote-linje" id="kvoteLinje"></p>
+    <div class="mock-forslag" id="mockForslag" hidden></div>
     <ul class="spiller-liste" id="spillerListe"></ul>
   </div>
 </div>

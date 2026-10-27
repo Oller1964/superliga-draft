@@ -1356,3 +1356,72 @@ button.blok { justify-self: stretch; min-width: 0; width: 100%; }
   .hist-raekke { grid-template-columns: 60px 1fr auto; }
   .hist-raekke .se { grid-column: 2 / -1; justify-self: end; font-size: 13px; }
 }
+
+/* ===== Faner kan rulle på mobil ===== */
+.hovedfaner { overflow-x: auto; scrollbar-width: none; }
+.hovedfaner::-webkit-scrollbar { display: none; }
+.hovedfaner button { flex-shrink: 0; white-space: nowrap; }
+
+/* ===== Kampe ===== */
+.kampe { margin: 0 16px 20px; display: grid; gap: 8px; }
+.kampe-liste { display: grid; gap: 6px; max-width: 860px; }
+.kamp-dag { margin: 10px 0 2px; font-weight: 600; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--guld); }
+.kamp-dag:first-child { margin-top: 0; }
+.kamp-raekke { display: grid; grid-template-columns: 64px 1fr 24px 1fr; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 4px; background: var(--felt); box-shadow: var(--felt-skygge); }
+.kr-tid { font-weight: 700; font-size: 18px; color: #dfe6f5; }
+.kr-hold { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 18px; min-width: 0; }
+.kr-h { justify-content: flex-end; text-align: right; }
+.kr-mod { text-align: center; color: #7f8eae; font-weight: 700; }
+.kr-dine { grid-column: 2 / -1; text-align: center; font-weight: 500; font-size: 13px; color: var(--groen); }
+@media (max-width: 600px) {
+  .kamp-raekke { grid-template-columns: 44px 1fr 14px 1fr; gap: 6px; padding: 10px; }
+  .kr-tid { font-size: 15px; }
+  .kr-hold { font-size: 14px; gap: 6px; }
+}
+
+/* ===== Mock draft ===== */
+.mock { margin: 0 16px 20px; display: grid; gap: 10px; }
+.mock-intro { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-radius: 4px; background: var(--felt); box-shadow: var(--felt-skygge); }
+.mock-intro b { font-size: 18px; }
+.mock-intro p { margin: 2px 0 0; color: #a9b7d6; font-weight: 500; }
+.mock-liste { display: grid; gap: 8px; }
+.mock-raekke { display: grid; grid-template-columns: 120px repeat(3, minmax(0, 1fr)); gap: 8px; align-items: stretch; }
+.mr-lab { display: flex; flex-direction: column; justify-content: center; padding: 0 4px; }
+.mr-lab b { font-size: 18px; }
+.mr-lab small { color: #94a3c2; font-weight: 500; font-size: 13px; }
+.mr-lab .tog { color: var(--groen); }
+.mr-lab .nu-tekst { color: var(--guld); font-weight: 700; }
+.mock-raekke.nu .mr-lab b { color: var(--guld); }
+.mock-raekke.gjort { opacity: 0.6; }
+.mock-felt { --c: #3a4a6b; position: relative; display: flex; align-items: center; gap: 8px; min-height: 58px; padding: 6px 30px 6px 30px; border: 0; border-radius: 4px; color: inherit; font: inherit; text-align: left;
+  background: linear-gradient(112deg, color-mix(in srgb, var(--c) 22%, var(--felt)) 0%, var(--felt) 45%); box-shadow: var(--felt-skygge); }
+.mock-felt.MM { --c: var(--MM); } .mock-felt.FOR { --c: var(--FOR); } .mock-felt.MID { --c: var(--MID); } .mock-felt.ANG { --c: var(--ANG); }
+.mock-felt.tom { justify-content: center; padding: 6px 12px; background: #121f42; color: #7f8eae; font-weight: 600; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); }
+.mock-felt.tom:hover { color: var(--guld); box-shadow: inset 0 0 0 1px rgba(217, 173, 82, 0.6); }
+.mock-felt.tom .mf-nr { background: #2a3a5e; }
+.mf-nr { position: absolute; left: 0; top: 0; width: 22px; height: 18px; padding-right: 4px; display: grid; place-items: center; background: var(--c); color: #fff; font-weight: 700; font-size: 11px; clip-path: polygon(0 0, 100% 0, 72% 100%, 0 100%); border-top-left-radius: 4px; }
+.mf-tx { flex: 1; min-width: 0; }
+.mf-navn { display: block; font-weight: 600; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mf-tx small { display: block; font-weight: 500; font-size: 12px; color: #8e9dbd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mock-felt.taget { opacity: 0.5; }
+.mock-felt.taget .mf-navn { text-decoration: line-through; }
+.mock-felt.taget small b { color: #e48a97; }
+.mock-felt.bud { box-shadow: 0 0 0 2px var(--guld), 0 2px 8px rgba(0, 0, 0, 0.35); }
+.mock-felt.bud small b { color: var(--guld); }
+.mock-felt.din small b { color: var(--groen); }
+.mf-fjern { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border: 0; border-radius: 3px; background: transparent; color: #7f8eae; font-size: 16px; cursor: pointer; }
+.mf-fjern:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+.mock-forslag { --c: var(--guld); display: flex; align-items: center; gap: 10px; margin: 0 0 10px; padding: 10px 12px; border-radius: 4px; background: linear-gradient(112deg, color-mix(in srgb, var(--guld) 16%, #14234a), #14234a 60%); box-shadow: 0 0 0 1px rgba(217, 173, 82, 0.5); }
+.mock-forslag[hidden] { display: none; }
+.mock-forslag .mfs-lab { font-weight: 600; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--guld); }
+.mock-forslag .mfs-navn { flex: 1; font-weight: 600; font-size: 17px; }
+.mock-forslag .kap-knap { margin: 0; }
+.mock-forslag .c-pos.MM { --c: var(--MM); } .mock-forslag .c-pos.FOR { --c: var(--FOR); } .mock-forslag .c-pos.MID { --c: var(--MID); } .mock-forslag .c-pos.ANG { --c: var(--ANG); }
+@media (max-width: 700px) {
+  .mock-raekke { grid-template-columns: 1fr; gap: 6px; }
+  .mr-lab { flex-direction: row; align-items: baseline; justify-content: flex-start; gap: 10px; margin-top: 6px; }
+  .mock-intro { flex-direction: column; align-items: stretch; }
+}
+.sp-klub-mobil { display: none; color: #dfe6f5; font-weight: 600; }
+@media (max-width: 600px) { .sp-klub-mobil { display: inline; } }
+.mock-intro .tilfoej { width: auto; flex-shrink: 0; padding: 8px 16px; }

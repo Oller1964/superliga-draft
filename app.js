@@ -39,11 +39,14 @@ var MINE_LIGAER = [];       // [{ id, navn }]
 function ligaDoc(sti) { return db.doc("ligaer/" + LIGA + "/" + sti); }
 function ligaCol(sti) { return db.collection("ligaer/" + LIGA + "/" + sti); }
 var D = { spillere: [], efterId: {}, prisDato: null, info: null, infoHentet: false, medlemmer: {},
-  uger: {}, picks: [], klar: {}, runderListe: [], runder: {}, kampe: {}, kampeDato: null, skader: {}, skaderDato: null, kaptajner: {} };
+  uger: {}, picks: [], klar: {}, runderListe: [], runder: {}, kampe: {}, kampeDato: null, skader: {}, skaderDato: null, kaptajner: {}, kampeListe: [], plan: tomPlan() };
+function tomPlan() { var p = []; for (var i = 0; i < SPILLERE_PR_HOLD * MOCK_ANTAL; i++) p.push(""); return p; }
 var aktivUgeNr = null, picksUnsub = null, klarUnsub = null, kaptajnUnsub = null, lyttere = [];
 var tidligereKaptajner = {};
 var kaptajnTilstand = false;
 var aabenHistorik = null;
+var MOCK_ANTAL = 3;           // ønsker pr. valg i mock draften
+var planSlot = null;          // { r, c } når spillervælgeren bruges til mock draften
 var valgt = null, filterPos = "ALLE";
 var tidligerePicks = {};
 var arbejder = false;
@@ -508,11 +511,13 @@ async function hentDatafiler() {
 
 function modtagKampe(data) {
   D.kampe = {};
+  D.kampeListe = [];
   var nu = Date.now();
   // Kun kampe, der ikke er spillet endnu (med 3 timers margin), så gamle kampe forsvinder af sig selv
   (data.kampe || []).forEach(function (k) {
     var t = Date.parse(k.tid);
     if (!isNaN(t) && t < nu - 3 * 3600000) return;
+    D.kampeListe.push({ hjemme: k.hjemme, ude: k.ude, tid: isNaN(t) ? null : t });
     if (!D.kampe[k.hjemme]) D.kampe[k.hjemme] = { mod: k.ude, hjemme: true, tid: isNaN(t) ? null : t };
     if (!D.kampe[k.ude]) D.kampe[k.ude] = { mod: k.hjemme, hjemme: false, tid: isNaN(t) ? null : t };
   });
@@ -591,6 +596,11 @@ function startLyttere() {
     if (!D.medlemmer[MIG] && qs.docs.length) { mistetAdgang(); return; }
     planlaegTegning();
   }, mistetAdgang));
+  lyttere.push(ligaDoc("plan/" + MIG).onSnapshot(function (s) {
+    var v = s.exists && Array.isArray(s.data().valg) ? s.data().valg : [];
+    D.plan = tomPlan().map(function (x, i) { return typeof v[i] === "string" ? v[i] : ""; });
+    planlaegTegning();
+  }, function () {}));
   lyttere.push(ligaCol("uger").onSnapshot(function (qs) {
     D.uger = {};
     qs.docs.forEach(function (d) { var x = d.data(); if (x && x.nr) D.uger[x.nr] = x; });
@@ -615,7 +625,7 @@ function stopLyttere() {
   aktivUgeNr = null;
   tidligerePicks = {}; tidligereKaptajner = {}; kaptajnTilstand = false; aabenHistorik = null;
   valgt = null;
-  D.medlemmer = {}; D.uger = {}; D.picks = []; D.klar = {}; D.info = null; D.infoHentet = false; D.runder = {}; D.kaptajner = {};
+  D.medlemmer = {}; D.uger = {}; D.picks = []; D.klar = {}; D.info = null; D.infoHentet = false; D.runder = {}; D.kaptajner = {}; D.plan = tomPlan(); planSlot = null;
 }
 
 // =====================================================
@@ -801,6 +811,8 @@ function tegnAlt() {
   tegnBoard(u, st);
   tegnStilling();
   tegnHistorik();
+  tegnKampe(u);
+  tegnMock(u, st);
   tegnTicker(u, st);
   if (!$("admin").hidden) tegnAdmin();
 
@@ -1106,6 +1118,103 @@ function tegnHistorik() {
   }).join("");
 }
 
+// ---------- Kampe-siden ----------
+var DAGE_LANG = { Mon: "Mandag", Tue: "Tirsdag", Wed: "Onsdag", Thu: "Torsdag", Fri: "Fredag", Sat: "Lørdag", Sun: "Søndag" };
+function tegnKampe(u) {
+  var liste = D.kampeListe.slice().sort(function (a, b) { return (a.tid || 0) - (b.tid || 0); });
+  if (!liste.length) {
+    $("kampeListe").innerHTML = "";
+    $("kampeInfo").textContent = "Næste rundes kampe bliver lagt ind tirsdag morgen.";
+    return;
+  }
+  var mine = u ? holdPicks(MIG, D.picks) : [];
+  var html = "", dag = null;
+  liste.forEach(function (k) {
+    var d = k.tid ? kbhDele(k.tid) : null;
+    var dagNavn = d ? DAGE_LANG[d.wd] + " " + d.d + "/" + d.m : "Tidspunkt kommer";
+    if (dagNavn !== dag) { html += '<h3 class="kamp-dag">' + dagNavn + '</h3>'; dag = dagNavn; }
+    var dine = mine.filter(function (p) { return p.klub === k.hjemme || p.klub === k.ude; })
+      .map(function (p) { var s = D.efterId[p.spillerId]; return esc(s ? s.efternavn : p.spillerId); });
+    html += '<div class="kamp-raekke">' +
+      '<span class="kr-tid">' + (d ? d.h + "." + ("0" + d.min).slice(-2) : "–") + '</span>' +
+      '<span class="kr-hold kr-h">' + esc(KLUBBER[k.hjemme] || k.hjemme) + troeje(k.hjemme, 26) + '</span>' +
+      '<span class="kr-mod">–</span>' +
+      '<span class="kr-hold kr-u">' + troeje(k.ude, 26) + esc(KLUBBER[k.ude] || k.ude) + '</span>' +
+      (dine.length ? '<span class="kr-dine">Dine: ' + dine.join(", ") + '</span>' : "") + '</div>';
+  });
+  $("kampeListe").innerHTML = html;
+  $("kampeInfo").textContent = "Tiderne er dansk tid. Programmet opdateres tirsdag og torsdag" +
+    (D.kampeDato && visDato(D.kampeDato) ? " (sidst " + visDato(D.kampeDato) + ")." : ".");
+}
+
+// ---------- Mock draft ----------
+function planRaekke(r) { return D.plan.slice(r * MOCK_ANTAL, r * MOCK_ANTAL + MOCK_ANTAL); }
+function ejere(picks) { var e = {}; picks.forEach(function (p) { e[p.spillerId] = p.uid; }); return e; }
+// Første ønske i rækken, der stadig er ledigt og passer på en position, du mangler
+function mockBud(r, picks) {
+  var e = ejere(picks);
+  return planRaekke(r).filter(function (id) {
+    var s = D.efterId[id];
+    return s && !e[id] && maaVaelges(MIG, s, picks);
+  })[0] || null;
+}
+function naesteMockBud() {
+  var u = aktivUge();
+  if (!u) return null;
+  var r = holdPicks(MIG, D.picks).length;
+  return r < SPILLERE_PR_HOLD ? mockBud(r, D.picks) : null;
+}
+async function gemPlan() {
+  try { await ligaDoc("plan/" + MIG).set({ valg: D.plan }); } catch (e) {}
+}
+function tegnMock(u, st) {
+  var picks = u ? D.picks : [];
+  var mine = holdPicks(MIG, picks);
+  var e = ejere(picks);
+  var n = u ? u.raekkefoelge.length : 0;
+  var c = u ? u.raekkefoelge.indexOf(MIG) : -1;
+  var html = "";
+  for (var r = 0; r < SPILLERE_PR_HOLD; r++) {
+    var pickNr = c >= 0 ? r * n + (r % 2 === 0 ? c : n - 1 - c) + 1 : null;
+    var gjort = mine[r];
+    var nu = u && !gjort && r === mine.length && st && !st.faerdig;
+    var bud = nu ? mockBud(r, picks) : null;
+    var tog = gjort && D.efterId[gjort.spillerId];
+    html += '<div class="mock-raekke' + (nu ? " nu" : "") + (gjort ? " gjort" : "") + '">' +
+      '<div class="mr-lab"><b>Valg ' + (r + 1) + '</b>' + (pickNr ? '<small>Pick ' + pickNr + '</small>' : "") +
+      (gjort ? '<small class="tog">Du tog ' + esc(tog ? tog.efternavn : gjort.spillerId) + '</small>' : nu ? '<small class="nu-tekst">' + (st.uid === MIG ? "Din tur nu" : "Dit næste valg") + '</small>' : "") + '</div>';
+    planRaekke(r).forEach(function (id, i) {
+      var s = id && D.efterId[id];
+      if (!s) {
+        html += '<button type="button" class="mock-felt tom" data-r="' + r + '" data-c="' + i + '"><span class="mf-nr">' + (i + 1) + '</span>+ ' + (i + 1) + '. ønske</button>';
+        return;
+      }
+      var status = "", kl = "";
+      if (gjort && gjort.spillerId === id) { status = "Taget af dig"; kl = " din"; }
+      else if (e[id] === MIG) { status = "Allerede på dit hold"; kl = " taget"; }
+      else if (e[id]) { status = "Taget af " + esc(holdnavn(e[id])); kl = " taget"; }
+      else if (bud === id) { status = "Dit bud"; kl = " bud"; }
+      else if (nu && !maaVaelges(MIG, s, picks)) { status = "Positionen er fyldt"; kl = " taget"; }
+      html += '<div class="mock-felt ' + s.pos + kl + '"><span class="mf-nr">' + (i + 1) + '</span>' + troeje(s.klub, 22) +
+        '<span class="mf-tx"><span class="mf-navn">' + esc(fuldtNavn(s)) + skadeBadge(s.id) + '</span>' +
+        '<small><span class="c-pos">' + s.pos + '</span>' + esc(s.klub) + ' · form ' + form(s.pris) + (status ? ' · <b>' + status + '</b>' : "") + '</small></span>' +
+        '<button type="button" class="mf-fjern" data-r="' + r + '" data-c="' + i + '" aria-label="Fjern">×</button></div>';
+    });
+    html += '</div>';
+  }
+  $("mockListe").innerHTML = html;
+}
+function aabnPlanVaelger(r, c) {
+  planSlot = { r: r, c: c };
+  $("vaelgFor").textContent = "Mock draft · valg " + (r + 1) + " · " + (c + 1) + ". ønske";
+  $("vaelgTitel").textContent = "Vælg et ønske";
+  $("soeg").value = "";
+  tegnFilter();
+  tegnSpillerListe();
+  $("vaelger").hidden = false;
+  $("soeg").focus();
+}
+
 function tegnTicker(u, st) {
   var punkter = [];
   if (u && st && !st.faerdig && st.venter) {
@@ -1139,7 +1248,9 @@ function aabnVaelger() {
   if (!u) return;
   var st = ugeStatus(u, D.picks, Date.now());
   if (st.faerdig || st.venter || st.uid !== MIG) return;
+  planSlot = null;
   $("vaelgFor").textContent = "Dit valg";
+  $("vaelgTitel").textContent = "Ledige spillere";
   $("soeg").value = "";
   if (filterPos !== "ALLE" && antalPos(MIG, filterPos, D.picks) >= KVOTE[filterPos]) filterPos = "ALLE";
   tegnFilter();
@@ -1151,7 +1262,9 @@ function aabnVaelger() {
 function tegnFilter() {
   $("filter").querySelectorAll("button").forEach(function (b) {
     var pos = b.dataset.pos;
-    if (pos !== "ALLE") {
+    if (pos !== "ALLE" && planSlot) {
+      b.textContent = pos; b.disabled = false; b.classList.remove("fuld");
+    } else if (pos !== "ALLE") {
       var a = antalPos(MIG, pos, D.picks), fuld = a >= KVOTE[pos];
       b.textContent = pos + " " + a + "/" + KVOTE[pos];
       b.disabled = fuld;
@@ -1161,7 +1274,16 @@ function tegnFilter() {
   });
   var mangler = POS_RAEKKE.filter(function (p) { return antalPos(MIG, p, D.picks) < KVOTE[p]; })
     .map(function (p) { return (KVOTE[p] - antalPos(MIG, p, D.picks)) + " " + POSITIONER[p].toLowerCase(); });
-  $("kvoteLinje").textContent = "Du mangler: " + mangler.join(", ") + ".";
+  $("kvoteLinje").textContent = planSlot ? "Vælg en spiller til dit " + (planSlot.c + 1) + ". ønske. Spillere, der allerede er taget, vises ikke." :
+    "Du mangler: " + mangler.join(", ") + ".";
+  var bud = planSlot ? null : naesteMockBud(), bs = bud && D.efterId[bud];
+  if (bs) {
+    $("mockForslag").innerHTML = '<span class="mfs-lab">Fra din mock draft</span>' + troeje(bs.klub, 22) +
+      '<span class="mfs-navn">' + esc(fuldtNavn(bs)) + ' <span class="c-pos ' + bs.pos + '">' + bs.pos + '</span></span>' +
+      '<button type="button" class="kap-knap" data-id="' + esc(bs.id) + '">Vælg ham</button>';
+    $("mockForslag").className = "mock-forslag " + bs.pos;
+    $("mockForslag").hidden = false;
+  } else $("mockForslag").hidden = true;
 }
 
 function trendHtml(s) {
@@ -1175,7 +1297,9 @@ function tegnSpillerListe() {
   var t = taget(D.picks);
   var q = $("soeg").value.trim().toLowerCase();
   var liste = D.spillere.filter(function (s) {
-    if (t[s.id] || !maaVaelges(MIG, s, D.picks)) return false;
+    if (t[s.id]) return false;
+    if (planSlot) { if (planRaekke(planSlot.r).indexOf(s.id) !== -1) return false; }
+    else if (!maaVaelges(MIG, s, D.picks)) return false;
     if (filterPos !== "ALLE" && s.pos !== filterPos) return false;
     if (!q) return true;
     return (fuldtNavn(s) + " " + s.klub + " " + (KLUBBER[s.klub] || "")).toLowerCase().indexOf(q) !== -1;
@@ -1190,7 +1314,7 @@ function tegnSpillerListe() {
     var sk = skadeFor(s.id);
     return '<li class="sp-raekke-wrap"><button type="button" class="sp-knap ' + s.pos + (sk && sk.status !== "tvivl" ? " ude" : "") + '" data-id="' + esc(s.id) + '"' + (raad ? "" : " disabled") + '>' +
       '<span class="tag ' + s.pos + '">' + s.pos + '</span>' +
-      '<span class="sp-navn"><span class="navn-linje">' + troeje(s.klub, 18) + '<span>' + esc(fuldtNavn(s)) + '</span>' + skadeBadge(s.id) + '</span><small>' + esc(info) + '</small>' + kampLinje(s.klub) + '</span>' +
+      '<span class="sp-navn"><span class="navn-linje">' + troeje(s.klub, 18) + '<span>' + esc(fuldtNavn(s)) + '</span>' + skadeBadge(s.id) + '</span><small><span class="sp-klub-mobil">' + esc(KLUBBER[s.klub] || s.klub) + ' · </span>' + esc(info) + '</small>' + kampLinje(s.klub) + '</span>' +
       '<span class="sp-klub">' + esc(KLUBBER[s.klub] || s.klub) + '</span>' +
       '<span class="sp-pris" title="Form 0-100">' + form(s.pris) + trendHtml(s) + '</span></button>' +
       '<button type="button" class="sp-info-knap" data-info="' + esc(s.id) + '" aria-label="Se stats for ' + esc(fuldtNavn(s)) + '">i</button></li>';
@@ -1343,6 +1467,14 @@ $("spillerListe").addEventListener("click", function (e) {
   if (info) { aabnSpillerKort(info.dataset.info); return; }
   var knap = e.target.closest(".sp-knap");
   if (!knap || knap.disabled) return;
+  if (planSlot) {
+    D.plan[planSlot.r * MOCK_ANTAL + planSlot.c] = knap.dataset.id;
+    planSlot = null;
+    $("vaelger").hidden = true;
+    gemPlan();
+    planlaegTegning();
+    return;
+  }
   valgt = D.efterId[knap.dataset.id] || null;
   $("vaelger").hidden = true;
   planlaegTegning();
@@ -1364,6 +1496,21 @@ $("board").addEventListener("keydown", function (e) {
   else aabnSpillerKort(c.dataset.spiller, c.dataset.ejer);
 });
 $("lukKort").addEventListener("click", function () { $("spillerKort").hidden = true; });
+$("mockForslag").addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-id]");
+  if (!b) return;
+  valgt = D.efterId[b.dataset.id] || null;
+  $("vaelger").hidden = true;
+  planlaegTegning();
+  $("draftKnap").focus();
+});
+$("mockListe").addEventListener("click", function (e) {
+  var f = e.target.closest(".mf-fjern");
+  if (f) { D.plan[+f.dataset.r * MOCK_ANTAL + +f.dataset.c] = ""; gemPlan(); planlaegTegning(); return; }
+  var t = e.target.closest(".mock-felt.tom");
+  if (t) aabnPlanVaelger(+t.dataset.r, +t.dataset.c);
+});
+$("mockRyd").addEventListener("click", function () { D.plan = tomPlan(); gemPlan(); planlaegTegning(); });
 $("kortKaptajn").addEventListener("click", function () { saetKaptajn($("kortKaptajn").dataset.id); $("spillerKort").hidden = true; });
 $("historikListe").addEventListener("click", function (e) {
   var b = e.target.closest("[data-uge]");
@@ -1386,10 +1533,7 @@ $("hovedfaner").addEventListener("click", function (e) {
   var b = e.target.closest("button");
   if (!b) return;
   $("hovedfaner").querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
-  $("boardFane").hidden = b.dataset.fane !== "board";
-  $("stillingFane").hidden = b.dataset.fane !== "stilling";
-  $("reglerFane").hidden = b.dataset.fane !== "regler";
-  $("historikFane").hidden = b.dataset.fane !== "historik";
+  $("hovedfaner").querySelectorAll("button").forEach(function (x) { $(x.dataset.fane + "Fane").hidden = x !== b; });
 });
 
 $("adminKnap").addEventListener("click", async function () {

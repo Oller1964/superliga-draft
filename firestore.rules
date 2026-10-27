@@ -41,6 +41,11 @@ service cloud.firestore {
         allow delete: if logget() && (request.auth.uid == uid || ejer(liga));
       }
 
+      // Mock draft: kun ejeren af planen kan se og ændre den.
+      match /plan/{uid} {
+        allow read, write: if medlem(liga) && request.auth.uid == uid;
+      }
+
       match /uger/{nr} {
         allow read: if medlem(liga);
         allow create: if medlem(liga) && request.resource.data.antalPicks == 0;
