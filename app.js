@@ -1103,6 +1103,49 @@ function tegnBoard(u, st) {
   board.innerHTML = html;
 }
 
+// Stillingen over tid: placering efter hver afgjort uge, dit hold i guld
+var GRAF_FARVER = ["#38c6f4", "#1fd18a", "#ff4d6d", "#b48cff", "#3b9bff", "#ff9f43", "#5be3c4", "#f78fb3", "#9aa9c7", "#c3e65a"];
+function tegnStillingGraf() {
+  var uger = afgjorteUger().slice().reverse();
+  var boks = $("stillingGraf");
+  if (uger.length < 2) {
+    boks.hidden = !uger.length;
+    if (uger.length) $("stillingGrafSvg").innerHTML = '<p class="sp-hjaelp">Grafen kommer, når der er spillet to uger.</p>';
+    return;
+  }
+  var total = {}, rk = {};
+  var holdUid = Object.keys(D.medlemmer);
+  uger.forEach(function (x) { x.hold.forEach(function (h) { if (holdUid.indexOf(h.uid) < 0) holdUid.push(h.uid); }); });
+  uger.forEach(function (x, i) {
+    x.hold.forEach(function (h) { total[h.uid] = (total[h.uid] || 0) + h.point; });
+    var sorteret = holdUid.slice().sort(function (a, b) { return (total[b] || 0) - (total[a] || 0); });
+    sorteret.forEach(function (uid, j) {
+      var plads = j > 0 && (total[uid] || 0) === (total[sorteret[j - 1]] || 0) ? rk[sorteret[j - 1]][i] : j + 1;
+      (rk[uid] = rk[uid] || [])[i] = plads;
+    });
+  });
+  var n = holdUid.length, m = uger.length;
+  var smal = window.innerWidth < 600;
+  var V = 40, H = smal ? 132 : 150, T = 18, B = 30, rH = smal ? 26 : 30;
+  var W = V + (smal ? Math.max(190, m * 55) : Math.max(560, m * 90)) + H, hoejde = T + (n - 1) * rH + B;
+  var x = function (i) { return V + (m === 1 ? 0 : i * (W - V - H) / (m - 1)); };
+  var y = function (p) { return T + (p - 1) * rH; };
+  var svg = '<svg viewBox="0 0 ' + W + ' ' + hoejde + '" class="graf" style="min-width:' + Math.round(W * 0.8) + 'px" role="img" aria-label="Placering efter hver uge">';
+  for (var p = 1; p <= n; p++) svg += '<line x1="' + V + '" x2="' + (W - H + 8) + '" y1="' + y(p) + '" y2="' + y(p) + '" class="g-linje"/><text x="' + (V - 14) + '" y="' + (y(p) + 4) + '" class="g-akse" text-anchor="end">' + p + '.</text>';
+  uger.forEach(function (u, i) { svg += '<text x="' + x(i) + '" y="' + (hoejde - 8) + '" class="g-akse" text-anchor="middle">Uge ' + u.nr + '</text>'; });
+  var mig = holdUid.indexOf(MIG) >= 0 ? MIG : null;
+  holdUid.filter(function (uid) { return uid !== mig; }).concat(mig ? [mig] : []).forEach(function (uid, k) {
+    var farve = uid === mig ? "var(--guld)" : GRAF_FARVER[holdUid.indexOf(uid) % GRAF_FARVER.length];
+    var pts = rk[uid].map(function (pl, i) { return x(i) + "," + y(pl); }).join(" ");
+    var sidste = rk[uid][m - 1];
+    svg += '<g class="g-hold' + (uid === mig ? " mig" : "") + '" style="--f:' + farve + '"><polyline points="' + pts + '"/>' +
+      rk[uid].map(function (pl, i) { return '<circle cx="' + x(i) + '" cy="' + y(pl) + '" r="' + (uid === mig ? 5 : 3.5) + '"><title>' + esc(holdnavn(uid)) + ': ' + pl + '. efter uge ' + uger[i].nr + '</title></circle>'; }).join("") +
+      '<text x="' + (W - H + 16) + '" y="' + (y(sidste) + 4) + '" class="g-navn">' + esc(holdnavn(uid)) + '</text></g>';
+  });
+  $("stillingGrafSvg").innerHTML = svg + '</svg>';
+  boks.hidden = false;
+}
+
 function tegnStilling() {
   var raekker = stilling();
   var uger = afgjorteUger();
@@ -1125,6 +1168,7 @@ function tegnStilling() {
       '<td class="tal">' + r.runder + '</td>' +
       '<td class="tal point">' + r.total + '</td></tr>';
   }).join("") || '<tr><td colspan="5" class="tom-tekst">Ingen hold endnu.</td></tr>';
+  tegnStillingGraf();
   var antalRunder = Object.keys(D.runder).length;
   $("stillingInfo").textContent = antalRunder ? antalRunder + " runde" + (antalRunder === 1 ? "" : "r") + " er talt med." :
     "Stillingen bliver regnet ud efter første runde. Point kommer hver tirsdag morgen.";
@@ -1625,7 +1669,7 @@ function aabnSpillerKort(id, ejerUid) {
       var r = rundePoint(s.id, s.pos, s.klub, rd);
       var kortTxt = (r.y ? r.y + " gult" : "") + (r.rd ? (r.y ? ", " : "") + r.rd + " rødt" : "");
       var d = kbhDele(Date.parse(rd.skrevet));
-      return '<tr><td>Uge til ' + d.d + '/' + d.m + '</td><td class="tal">' + r.min + '</td><td class="tal">' + r.g + '</td><td class="tal">' + r.a +
+      return '<tr><td>' + d.d + '/' + d.m + '</td><td class="tal">' + r.min + '</td><td class="tal">' + r.g + '</td><td class="tal">' + r.a +
         '</td><td class="tal">' + (kortTxt || "–") + '</td><td class="tal">' + (r.cs ? "✓" : "–") + '</td><td class="tal point">' + r.point + '</td></tr>';
     }).join("");
     $("kortNote").textContent = runder.length < 5 ? "Der er kun " + runder.length + " runde" + (runder.length === 1 ? "" : "r") + " registreret indtil videre." : "";

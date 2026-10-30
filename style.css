@@ -1579,3 +1579,26 @@ button.blok { justify-self: stretch; min-width: 0; width: 100%; }
   .point-detaljer { padding: 6px 10px 8px; }
   .point-detaljer .kup-r { font-size: 12.5px; }
 }
+
+/* Stillingen over tid */
+.stilling-graf { padding: 12px 14px 6px; border-radius: 4px; background: var(--felt); box-shadow: var(--felt-skygge); }
+.stilling-graf .kort-h3 { margin-top: 0; }
+#stillingGrafSvg { overflow-x: auto; }
+.stilling > * { min-width: 0; }
+.graf { display: block; width: 100%; max-width: 980px; height: auto; font-family: inherit; }
+.g-linje { stroke: rgba(255, 255, 255, 0.06); stroke-width: 1; }
+.g-akse { fill: #7f8eae; font-size: 12px; font-weight: 600; }
+.g-hold polyline { fill: none; stroke: var(--f); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; opacity: 0.55; }
+.g-hold circle { fill: var(--f); opacity: 0.8; }
+.g-hold .g-navn { fill: var(--f); font-size: 13px; font-weight: 600; opacity: 0.85; }
+.g-hold.mig polyline { stroke-width: 4; opacity: 1; }
+.g-hold.mig circle { opacity: 1; stroke: #0d1630; stroke-width: 2; }
+.g-hold.mig .g-navn { font-weight: 800; font-size: 14px; opacity: 1; }
+
+/* Spillerkortets rundetabel på mobil: plads til alle kolonner */
+@media (max-width: 600px) {
+  .kort-tabel th, .kort-tabel td { padding: 8px 5px; font-size: 13px; }
+  .kort-tabel th:first-child, .kort-tabel td:first-child { padding-left: 2px; }
+  .kort-tabel td:first-child { white-space: nowrap; }
+  .kort-tabel th.tal, .kort-tabel td.tal { min-width: 0; }
+}
