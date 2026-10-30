@@ -39,7 +39,7 @@ var MINE_LIGAER = [];       // [{ id, navn }]
 function ligaDoc(sti) { return db.doc("ligaer/" + LIGA + "/" + sti); }
 function ligaCol(sti) { return db.collection("ligaer/" + LIGA + "/" + sti); }
 var D = { spillere: [], efterId: {}, prisDato: null, info: null, infoHentet: false, medlemmer: {},
-  uger: {}, picks: [], klar: {}, runderListe: [], runder: {}, live: null, kampe: {}, kampeDato: null, skader: {}, skaderDato: null, kaptajner: {}, kampeListe: [], plan: tomPlan(), planer: {} };
+  uger: {}, picks: [], klar: {}, runderListe: [], runder: {}, live: null, program: null, kampe: {}, kampeDato: null, skader: {}, skaderDato: null, kaptajner: {}, kampeListe: [], plan: tomPlan(), planer: {} };
 function tomPlan() { var p = []; for (var i = 0; i < SPILLERE_PR_HOLD * MOCK_ANTAL; i++) p.push(""); return p; }
 var aktivUgeNr = null, picksUnsub = null, klarUnsub = null, kaptajnUnsub = null, lyttere = [];
 var tidligereKaptajner = {};
@@ -512,6 +512,10 @@ async function hentDatafiler() {
   try {
     var r2 = await fetch("data/runder.json?v=" + Date.now(), { cache: "no-store" });
     if (r2.ok) { var j = await r2.json(); D.runderListe = j.runder || []; kobRunderTilUger(); }
+  } catch (e) {}
+  try {
+    var r6 = await fetch("data/program.json?v=" + Date.now(), { cache: "no-store" });
+    if (r6.ok) { var j6 = await r6.json(); D.program = j6.runder && j6.runder.length ? j6 : null; }
   } catch (e) {}
   try {
     var r5 = await fetch("data/live.json?v=" + Date.now(), { cache: "no-store" });
@@ -1147,7 +1151,81 @@ function tegnHistorik() {
 
 // ---------- Kampe-siden ----------
 var DAGE_LANG = { Mon: "Mandag", Tue: "Tirsdag", Wed: "Onsdag", Thu: "Torsdag", Fri: "Fredag", Sat: "Lørdag", Sun: "Søndag" };
+// Hele sæsonen fra data/program.json: én runde ad gangen med pile, resultater og hændelser
+var kampeRunde = null, aabneKampe = {};
+function kampMs(k) {
+  if (!k.tid) return null;
+  return Date.parse(k.tid.indexOf("T") > 0 ? k.tid : k.tid + "T12:00:00Z");
+}
+function aktuelProgramRunde() {
+  var r = D.program.runder, nu = Date.now();
+  for (var i = 0; i < r.length; i++) {
+    if (r[i].kampe.some(function (k) { var t = kampMs(k); return !k.res && (t === null || t > nu - 3 * 3600000); })) return i;
+  }
+  return r.length - 1;
+}
+function haendelseHtml(e, k) {
+  var navn = esc(e.spiller), tekst;
+  if (e.type === "maal" || e.type === "straffe" || e.type === "selvmaal") {
+    tekst = '<span class="kh-ikon">⚽</span>' + navn + (e.type === "straffe" ? " <small>(str.)</small>" : e.type === "selvmaal" ? " <small>(selvmål)</small>" : "") +
+      (e.assist ? '<small class="kh-assist">Assist: ' + esc(e.assist) + '</small>' : "");
+  } else {
+    var kort = e.type === "gult" ? "gul" : e.type === "roedt" ? "roed" : "gulroed";
+    tekst = '<span class="kh-kort ' + kort + '"></span>' + navn + (e.type === "gultroedt" ? " <small>(2. gule)</small>" : "");
+  }
+  var hjemme = e.klub === k.hjemme;
+  return '<div class="kh"><span class="kh-min">' + (e.min !== null && e.min !== undefined ? e.min + "'" : "") + '</span>' +
+    '<span class="kh-h">' + (hjemme ? tekst : "") + '</span><span class="kh-u">' + (hjemme ? "" : tekst) + '</span></div>';
+}
+function tegnProgram(u) {
+  var runder = D.program.runder, akt = aktuelProgramRunde();
+  if (kampeRunde === null || kampeRunde >= runder.length) kampeRunde = akt;
+  var rd = runder[kampeRunde];
+  var tider = rd.kampe.map(kampMs).filter(function (t) { return t !== null; });
+  var fra = tider.length ? kbhDele(Math.min.apply(null, tider)) : null, til = tider.length ? kbhDele(Math.max.apply(null, tider)) : null;
+  var periode = fra ? fra.d + "/" + fra.m + (til.d + "/" + til.m !== fra.d + "/" + fra.m ? " – " + til.d + "/" + til.m : "") : "";
+  var mine = u && kampeRunde === akt ? holdPicks(MIG, D.picks) : [];
+  var html = '<div class="runde-nav">' +
+    '<button type="button" class="rn-pil" data-runde="' + (kampeRunde - 1) + '"' + (kampeRunde === 0 ? " disabled" : "") + ' aria-label="Forrige runde">‹</button>' +
+    '<div class="rn-midt"><b>Runde ' + rd.nr + '</b><small>' + periode + (kampeRunde === akt ? " · denne runde" : "") + '</small></div>' +
+    '<button type="button" class="rn-pil" data-runde="' + (kampeRunde + 1) + '"' + (kampeRunde === runder.length - 1 ? " disabled" : "") + ' aria-label="Næste runde">›</button></div>';
+  var dag = null;
+  rd.kampe.slice().sort(function (a, b) { return (kampMs(a) || 0) - (kampMs(b) || 0); }).forEach(function (k) {
+    var t = kampMs(k), d = t !== null ? kbhDele(t) : null, kunDato = k.tid && k.tid.indexOf("T") < 0;
+    var dagNavn = d ? DAGE_LANG[d.wd] + " " + d.d + "/" + d.m : "Dato kommer";
+    if (dagNavn !== dag) { html += '<h3 class="kamp-dag">' + dagNavn + '</h3>'; dag = dagNavn; }
+    var noegle = rd.nr + "-" + k.hjemme + "-" + k.ude;
+    var kanAabne = !!(k.res && k.haendelser), aaben = kanAabne && aabneKampe[noegle];
+    var dine = mine.filter(function (p) { return p.klub === k.hjemme || p.klub === k.ude; })
+      .map(function (p) { var s = D.efterId[p.spillerId]; return esc(s ? s.efternavn : p.spillerId); });
+    html += '<div class="kamp-raekke prog' + (kanAabne ? " klik" : "") + (aaben ? " aaben" : "") + '"' +
+      (kanAabne ? ' data-kamp="' + esc(noegle) + '" tabindex="0" role="button" aria-expanded="' + (aaben ? "true" : "false") + '"' : "") + '>' +
+      '<span class="kr-tid">' + (k.res ? '<small>Slut</small>' : d && !kunDato ? d.h + "." + ("0" + d.min).slice(-2) : "–") + '</span>' +
+      '<span class="kr-hold kr-h">' + esc(KLUBBER[k.hjemme] || k.hjemme) + troeje(k.hjemme, 26) + '</span>' +
+      '<span class="kr-mod' + (k.res ? " res" : "") + '">' + (k.res ? k.res[0] + "–" + k.res[1] : "–") + '</span>' +
+      '<span class="kr-hold kr-u">' + troeje(k.ude, 26) + esc(KLUBBER[k.ude] || k.ude) + '</span>' +
+      (kanAabne ? '<span class="kr-pil">' + (aaben ? "▴" : "▾") + '</span>' : "") +
+      (dine.length && !k.res ? '<span class="kr-dine">Dine: ' + dine.join(", ") + '</span>' : "") + '</div>';
+    if (aaben) {
+      html += '<div class="kamp-detaljer">' + (k.haendelser.length ? k.haendelser.map(function (e) { return haendelseHtml(e, k); }).join("") :
+        '<p class="kh-tom">Ingen mål eller kort i kampen.</p>') + '</div>';
+    }
+  });
+  $("kampeListe").innerHTML = html;
+  $("kampeInfo").textContent = "Tiderne er dansk tid. Tryk på en spillet kamp for at se mål og kort (fra runde 13 og frem). " +
+    "Resultater kommer ca. 2¼ time efter kampstart.";
+}
+$("kampeListe").addEventListener("click", function (e) {
+  var pil = e.target.closest(".rn-pil");
+  if (pil && !pil.disabled) { kampeRunde = Number(pil.dataset.runde); tegnKampe(aktivUge()); return; }
+  var r = e.target.closest(".kamp-raekke.klik");
+  if (r) { aabneKampe[r.dataset.kamp] = !aabneKampe[r.dataset.kamp]; tegnKampe(aktivUge()); }
+});
+$("kampeListe").addEventListener("keydown", function (e) {
+  if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("klik")) { e.preventDefault(); e.target.click(); }
+});
 function tegnKampe(u) {
+  if (D.program) { tegnProgram(u); return; }
   var liste = D.kampeListe.slice().sort(function (a, b) { return (a.tid || 0) - (b.tid || 0); });
   if (!liste.length) {
     $("kampeListe").innerHTML = "";

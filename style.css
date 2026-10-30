@@ -1497,3 +1497,42 @@ button.blok { justify-self: stretch; min-width: 0; width: 100%; }
 }
 @keyframes live-blink { 50% { opacity: 0.55; } }
 @media (prefers-reduced-motion: reduce) { .live-maerke { animation: none; } }
+
+/* Kampe: runder med pile, resultater og hændelser */
+.runde-nav { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; max-width: 860px; padding: 6px; border-radius: 4px; background: var(--felt); box-shadow: var(--felt-skygge); }
+.rn-pil { height: 40px; border: 0; border-radius: 4px; background: rgba(255, 255, 255, 0.05); color: var(--guld); font-size: 26px; line-height: 1; }
+.rn-pil:hover:not(:disabled) { background: rgba(217, 173, 82, 0.15); }
+.rn-pil:disabled { color: #3c4a68; cursor: default; }
+.rn-midt { text-align: center; }
+.rn-midt b { display: block; font-size: 17px; font-weight: 700; }
+.rn-midt small { color: #94a3c2; font-size: 12.5px; font-weight: 500; }
+.kamp-raekke.prog { grid-template-columns: 64px 1fr 58px 1fr 16px; }
+.kamp-raekke.prog .kr-dine { grid-column: 2 / 5; }
+.kamp-raekke.klik { cursor: pointer; }
+.kamp-raekke.klik:hover { filter: brightness(1.15); }
+.kamp-raekke.aaben { border-radius: 4px 4px 0 0; }
+.kr-tid small { font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #94a3c2; }
+.kr-mod.res { padding: 3px 0; border-radius: 3px; background: rgba(255, 255, 255, 0.08); color: var(--tekst); font-size: 17px; letter-spacing: 1px; }
+.kr-pil { color: #94a3c2; font-size: 12px; text-align: right; }
+.kamp-detaljer { max-width: 860px; margin-top: -6px; padding: 8px 16px 10px; border-radius: 0 0 4px 4px; background: rgba(20, 35, 74, 0.55); box-shadow: var(--felt-skygge); }
+.kh { display: grid; grid-template-columns: 40px 1fr 1fr; gap: 10px; padding: 5px 0; font-size: 14px; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+.kh:first-child { border-top: 0; }
+.kh-min { color: #94a3c2; font-weight: 600; }
+.kh-h { text-align: right; }
+.kh-assist { display: block; color: #94a3c2; font-size: 12.5px; }
+.kh small { color: #94a3c2; }
+.kh-ikon { margin: 0 5px; font-size: 13px; }
+.kh-kort { display: inline-block; width: 9px; height: 12px; margin: 0 6px; border-radius: 1.5px; vertical-align: -1px; }
+.kh-kort.gul { background: #f5c518; }
+.kh-kort.roed { background: var(--ANG); }
+.kh-kort.gulroed { background: linear-gradient(135deg, #f5c518 50%, var(--ANG) 50%); }
+.kh-tom { margin: 4px 0; color: #94a3c2; font-size: 13px; }
+@media (max-width: 600px) {
+  .kamp-raekke.prog { grid-template-columns: 34px minmax(0, 1fr) 40px minmax(0, 1fr) 8px; gap: 5px; padding: 10px 8px; }
+  .kamp-raekke.prog .kr-tid { font-size: 13px; }
+  .kamp-raekke.prog .kr-tid small { font-size: 10px; letter-spacing: 0.5px; }
+  .kamp-raekke.prog .kr-hold { font-size: 13px; gap: 4px; overflow-wrap: anywhere; line-height: 1.2; }
+  .kamp-raekke.prog .troeje { flex-shrink: 0; }
+  .kr-mod.res { font-size: 14px; letter-spacing: 0; }
+  .kh { grid-template-columns: 30px 1fr 1fr; font-size: 13px; }
+}
