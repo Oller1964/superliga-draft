@@ -1457,3 +1457,25 @@ button.blok { justify-self: stretch; min-width: 0; width: 100%; }
 .kort-chance small { display: block; color: #94a3c2; font-size: 12.5px; font-weight: 500; }
 @media (max-width: 600px) { .kort-draft { grid-template-columns: 1fr 1fr; } .kort-draft > div:last-child { grid-column: 1 / -1; } }
 .kort-chance small b { color: var(--guld); font-weight: 600; }
+
+/* Dit hold: gul streg der løber rundt om din kolonne */
+@property --mig-vinkel { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.kol.mig-kol { position: relative; }
+.kol.mig-kol::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 3px;
+  border-radius: inherit;
+  background: conic-gradient(from var(--mig-vinkel), rgba(217, 173, 82, 0.4) 0 45%, var(--guld) 72%, #fff3c9 85%, var(--guld) 92%, rgba(217, 173, 82, 0.4) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: mig-rundt 3s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+@keyframes mig-rundt { to { --mig-vinkel: 360deg; } }
+@media (prefers-reduced-motion: reduce) {
+  .kol.mig-kol::before { animation: none; background: var(--guld); }
+}
