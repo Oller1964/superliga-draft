@@ -238,10 +238,14 @@ function kaptajnFor(ugeNr, uid, picks) {
   return k.spillerId;
 }
 // Live-point (data/live.json) gælder kun den aktive uge, efter deadline og indtil tirsdagens runde er registreret
+// Efter deadline og før de første tal er kommet, er runden "live" med 0 point til alle
+var TOM_LIVE = { id: "live", live: true, tom: true, skrevet: null, spillere: {}, modtaget: {} };
 function liveRunde(ugeNr) {
   var u = D.uger[ugeNr];
-  if (!D.live || !D.live.skrevet || !u || ugeNr !== aktivUgeNr || D.runder[ugeNr]) return null;
-  return Date.parse(D.live.skrevet) > Date.parse(u.deadline) ? D.live : null;
+  if (!u || ugeNr !== aktivUgeNr || D.runder[ugeNr]) return null;
+  var dl = Date.parse(u.deadline);
+  if (D.live && D.live.skrevet && Date.parse(D.live.skrevet) > dl) return D.live;
+  return Date.now() > dl ? TOM_LIVE : null;
 }
 function pointRunde(ugeNr) { return D.runder[ugeNr] || liveRunde(ugeNr); }
 function spillerPoint(ugeNr, p, picks) {
@@ -929,7 +933,8 @@ function tegnStatus(u, st) {
     $("blokNavn").textContent = "Ugens draft er færdig";
     var lv = liveRunde(u.nr);
     $("blokInfo").textContent = D.runder[u.nr] ? "Point for runden er regnet ud. Se stillingen." :
-      lv ? "Live-point på boardet, opdateret " + visTid(Date.parse(lv.skrevet)) + ". Endelige point kommer tirsdag." :
+      lv ? (lv.skrevet ? "Live-point på boardet, opdateret " + visTid(Date.parse(lv.skrevet)) + ". Endelige point kommer tirsdag." :
+        "Live-point kommer på boardet ca. 2¼ time efter hver kampstart. Endelige point kommer tirsdag.") :
       "Point kommer tirsdag, når weekendens runde er spillet.";
     $("kmNavn").textContent = "Færdig";
     $("kmPick").textContent = st.total + " picks";
@@ -1067,15 +1072,13 @@ function tegnBoard(u, st) {
           // Live: har klubben ikke spillet endnu, vises hvornår den spiller i stedet for 0 point
           var venter = runde.live && !sp.r.min && !(runde.modtaget && runde.modtaget[pick.klub] !== undefined);
           var pNoegle = pick.uid + "|" + pick.spillerId;
-          if (venter) {
+          var aaben = !!aabnePoint[pNoegle];
+          midt = '<div class="c-midt"><button type="button" class="pboks' + (aaben ? " aaben" : "") + '" data-point="' + esc(pNoegle) + '" aria-expanded="' + aaben + '">' +
+            '<b>' + (sp.point > 0 ? "+" : "") + sp.point + '</b><small>point' + (sp.kaptajn ? " · C ×2" : "") + '</small><i class="pil">' + (aaben ? "▴" : "▾") + '</i></button></div>';
+          if (aaben && venter) {
             var nk = naesteKamp(pick.klub);
-            midt = '<div class="c-midt"><span class="pboks tom"><b>–</b><small>' + (nk && nk.tid ? "spiller " + kortKampTid(nk.tid) : "ikke talt med") + '</small></span></div>';
-          } else {
-            var aaben = !!aabnePoint[pNoegle];
-            midt = '<div class="c-midt"><button type="button" class="pboks' + (aaben ? " aaben" : "") + '" data-point="' + esc(pNoegle) + '" aria-expanded="' + aaben + '">' +
-              '<b>' + (sp.point > 0 ? "+" : "") + sp.point + '</b><small>point' + (sp.kaptajn ? " · C ×2" : "") + '</small><i class="pil">' + (aaben ? "▴" : "▾") + '</i></button></div>';
-            if (aaben) detaljer = '<div class="point-detaljer">' + pointLinjer(s, sp.r, runde, sp.kaptajn ? 2 : 1, "I alt") + '</div>';
-          }
+            detaljer = '<div class="point-detaljer"><p class="kup-tom">Ingen point endnu' + (nk && nk.tid ? " – spiller " + kampDato(nk.tid, true) + " mod " + esc(KLUBBER[nk.mod] || nk.mod) : " – kampen er ikke talt med endnu") + '.</p></div>';
+          } else if (aaben) detaljer = '<div class="point-detaljer">' + pointLinjer(s, sp.r, runde, sp.kaptajn ? 2 : 1, "I alt") + '</div>';
         }
         var erKap = kap === pick.spillerId;
         var vaelgKap = kaptajnTilstand && uid === MIG;
