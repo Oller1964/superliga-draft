@@ -845,6 +845,7 @@ function tegnAlt() {
   tegnBoard(u, st);
   tegnStilling();
   tegnHistorik();
+  tegnStatistik();
   tegnKampe(u);
   tegnMock(u, st);
   tegnTicker(u, st);
@@ -1101,6 +1102,87 @@ function tegnBoard(u, st) {
     html += '</div>';
   });
   board.innerHTML = html;
+}
+
+// ---------- Statistik-siden: regnes ud fra de afgjorte uger ----------
+function kortNavn(s) { return s ? (s.fornavn ? s.fornavn[0] + ". " : "") + s.efternavn : "?"; }
+function tal1(x) { return String(Math.round(x * 10) / 10).replace(".", ","); }
+function tegnStatistik() {
+  var uger = afgjorteUger();
+  var ind = $("statistikIndhold");
+  if (!uger.length) {
+    ind.innerHTML = "";
+    $("statistikInfo").textContent = "Statistikken bliver regnet ud, når den første uge er afgjort. Point kommer hver tirsdag morgen.";
+    return;
+  }
+  var hold = {}, spillere = {}, rekord = null, bedsteKap = null;
+  uger.forEach(function (x) {
+    var picks = x.picks;
+    x.hold.forEach(function (h) {
+      var o = hold[h.uid] = hold[h.uid] || { uid: h.uid, uger: 0, point: 0, brugt: 0, bedste: 0, kapPlus: 0, kapUger: 0, sejre: 0 };
+      o.uger++; o.point += h.point; o.bedste = Math.max(o.bedste, h.point); o.brugt += brugt(h.uid, picks);
+      if (x.vindere.some(function (v) { return v.uid === h.uid; })) o.sejre++;
+      if (!rekord || h.point > rekord.point) rekord = { uid: h.uid, point: h.point, nr: x.nr };
+      var mine = holdPicks(h.uid, picks).map(function (p) { var sp = spillerPoint(x.nr, p, picks); return { p: p, base: sp.r ? sp.r.point : 0, kap: sp.kaptajn }; });
+      var kap = mine.filter(function (m) { return m.kap; })[0];
+      if (kap) {
+        var andre = mine.filter(function (m) { return !m.kap; }).map(function (m) { return m.base; });
+        o.kapPlus += kap.base - (andre.length ? Math.max.apply(null, andre) : 0); o.kapUger++;
+        if (!bedsteKap || kap.base * 2 > bedsteKap.point) bedsteKap = { id: kap.p.spillerId, uid: h.uid, nr: x.nr, point: kap.base * 2 };
+      }
+      mine.forEach(function (m) {
+        var sp = spillere[m.p.spillerId] = spillere[m.p.spillerId] || { id: m.p.spillerId, point: 0, uger: 0, pris: 0, hos: {} };
+        sp.point += m.base; sp.uger++; sp.pris += m.p.pris || 0; sp.hos[h.uid] = (sp.hos[h.uid] || 0) + 1;
+      });
+    });
+  });
+  var holdListe = Object.keys(hold).map(function (k) { var o = hold[k]; o.snit = o.point / o.uger; o.pr = o.brugt ? o.point / o.brugt : 0; return o; })
+    .sort(function (a, b) { return b.snit - a.snit; });
+  var spListe = Object.keys(spillere).map(function (k) {
+    var o = spillere[k]; o.s = D.efterId[o.id];
+    o.oftest = Object.keys(o.hos).sort(function (a, b) { return o.hos[b] - o.hos[a]; })[0];
+    o.prMio = o.pris ? o.point / o.pris : 0; return o;
+  });
+  var top = spListe.slice().sort(function (a, b) { return b.point - a.point || a.uger - b.uger; });
+  var bedsteHold = holdListe[0], bedsteSp = top[0];
+  var tile = function (lab, stor, navn, sub, mig) {
+    return '<div class="st-tile' + (mig ? " st-mig" : "") + '"><span class="st-lab">' + lab + '</span><b>' + stor + '</b><span class="st-navn">' + navn + '</span><small>' + sub + '</small></div>';
+  };
+  var html = '<div class="st-tiles">' +
+    tile("Bedste drafter", tal1(bedsteHold.snit), esc(holdnavn(bedsteHold.uid)), "point pr. uge i snit", bedsteHold.uid === MIG) +
+    (bedsteSp ? tile("Sæsonens spiller", bedsteSp.point, esc(kortNavn(bedsteSp.s)), "point for sine hold" + (bedsteSp.s ? " · " + bedsteSp.s.klub : ""), bedsteSp.oftest === MIG) : "") +
+    tile("Ugens rekord", rekord.point, esc(holdnavn(rekord.uid)), "uge " + rekord.nr, rekord.uid === MIG) +
+    (bedsteKap ? tile("Bedste kaptajn", bedsteKap.point, esc(kortNavn(D.efterId[bedsteKap.id])), esc(holdnavn(bedsteKap.uid)) + " · uge " + bedsteKap.nr + " (×2)", bedsteKap.uid === MIG) : "") +
+    '</div>';
+  html += '<div class="st-boks"><h3 class="kort-h3">Hvem drafter bedst</h3><div class="tabel-rul"><table class="stilling-tabel st-tabel">' +
+    '<thead><tr><th>Hold</th><th class="tal">Snit pr. uge</th><th class="tal">Point pr. mio.</th><th class="tal">Bedste uge</th><th class="tal">Kaptajn +/-</th><th class="tal">Ugesejre</th></tr></thead><tbody>' +
+    holdListe.map(function (o) {
+      return '<tr' + (o.uid === MIG ? ' class="mig-raekke"' : "") + '><td class="hold-navn">' + esc(holdnavn(o.uid)) + '</td><td class="tal point">' + tal1(o.snit) +
+        '</td><td class="tal">' + (Math.round(o.pr * 100) / 100).toFixed(2).replace(".", ",") + '</td><td class="tal">' + o.bedste +
+        '</td><td class="tal' + (o.kapPlus < 0 ? " neg" : "") + '">' + (o.kapUger ? (o.kapPlus > 0 ? "+" : "") + o.kapPlus : "–") + '</td><td class="tal">' + o.sejre + '</td></tr>';
+    }).join("") + '</tbody></table></div>' +
+    '<p class="sp-hjaelp">Point pr. mio.: point delt med det budget, holdet brugte. Kaptajn +/-: hvor mange point kaptajnen fik mere (eller mindre) end holdets bedste anden spiller, lagt sammen for alle uger.</p></div>';
+  html += '<div class="st-boks"><h3 class="kort-h3">Sæsonens bedste spillere i ligaen</h3><div class="tabel-rul"><table class="stilling-tabel st-tabel">' +
+    '<thead><tr><th>#</th><th>Spiller</th><th class="tal">Point</th><th class="tal">Draftet</th><th>Oftest hos</th></tr></thead><tbody>' +
+    top.slice(0, 10).map(function (o, i) {
+      var s = o.s || { efternavn: o.id, klub: "", pos: "" };
+      return '<tr' + (o.oftest === MIG ? ' class="mig-raekke"' : "") + '><td class="plads">' + (i + 1) + '</td><td><div class="st-spiller">' + troeje(s.klub, 24) +
+        '<div><b>' + esc(fuldtNavn(s)) + '</b><small><span class="tag ' + s.pos + '">' + s.pos + '</span> ' + esc(s.klub) + '</small></div></div></td>' +
+        '<td class="tal point">' + o.point + '</td><td class="tal">' + o.uger + (o.uger === 1 ? " uge" : " uger") + '</td><td>' + esc(holdnavn(o.oftest)) + '</td></tr>';
+    }).join("") + '</tbody></table></div></div>';
+  var liste = function (arr, vaerdi, ekstra) {
+    return '<ol class="st-liste">' + arr.map(function (o) {
+      return '<li><span>' + esc(fuldtNavn(o.s || { efternavn: o.id })) + (ekstra ? ' <small>· ' + ekstra(o) + '</small>' : "") + '</span><b>' + vaerdi(o) + '</b></li>';
+    }).join("") + '</ol>';
+  };
+  var flest = spListe.slice().sort(function (a, b) { return b.uger - a.uger || b.point - a.point; }).slice(0, 5);
+  var koeb = spListe.filter(function (o) { return o.pris > 0; }).sort(function (a, b) { return b.prMio - a.prMio || b.point - a.point; }).slice(0, 5);
+  html += '<div class="st-to"><div class="st-boks"><h3 class="kort-h3">Flest gange draftet</h3>' +
+    liste(flest, function (o) { return o.uger + (o.uger === 1 ? " uge" : " uger"); }) + '</div>' +
+    '<div class="st-boks"><h3 class="kort-h3">Bedste køb (point pr. mio.)</h3>' +
+    liste(koeb, function (o) { return tal1(o.prMio); }, function (o) { return tal1(o.pris / o.uger) + " mio."; }) + '</div></div>';
+  ind.innerHTML = html;
+  $("statistikInfo").textContent = "Regnet ud fra " + uger.length + " afgjort" + (uger.length === 1 ? " uge" : "e uger") + ". Opdateres hver tirsdag, når rundens point er talt.";
 }
 
 // Stillingen over tid: placering efter hver afgjort uge, dit hold i guld
