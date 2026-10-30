@@ -1549,3 +1549,33 @@ button.blok { justify-self: stretch; min-width: 0; width: 100%; }
 .kup-tom { margin: 4px 0 2px; color: #94a3c2; font-size: 13px; }
 .kup-sum { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 4px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.18); font-weight: 600; }
 .kup-sum b { font-size: 24px; font-weight: 700; color: var(--guld); }
+
+/* Boardet: rundens point i en boks midt på spillerens linje – tryk for udregningen */
+.kol { container-type: inline-size; }
+.c-midt { flex: 1; display: flex; justify-content: center; min-width: 0; }
+.pboks { display: inline-flex; align-items: baseline; gap: 7px; padding: 8px 14px 8px 16px; border: 0; border-radius: 4px; background: color-mix(in srgb, var(--guld) 13%, #101c3d); box-shadow: inset 0 0 0 1px rgba(217, 173, 82, 0.55); color: var(--tekst); font: inherit; cursor: pointer; white-space: nowrap; }
+.pboks:hover { background: color-mix(in srgb, var(--guld) 22%, #101c3d); }
+.pboks b { font-weight: 800; font-size: 26px; line-height: 1; color: var(--guld); }
+.pboks small { font-weight: 600; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: #c9b27a; }
+.pboks .pil { font-style: normal; font-size: 11px; color: #c9b27a; margin-left: 2px; }
+.pboks.aaben { box-shadow: inset 0 0 0 1.5px var(--guld); }
+.pboks.tom { background: none; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1); cursor: default; }
+.pboks.tom b { color: #3c4a68; }
+.pboks.tom small { color: #94a3c2; text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 500; }
+.point-detaljer { margin-top: -6px; padding: 8px 16px 10px; border-radius: 0 0 4px 4px; background: rgba(20, 35, 74, 0.6); box-shadow: var(--felt-skygge); }
+.point-detaljer > div { max-width: 420px; margin-left: auto; margin-right: auto; }
+.point-detaljer .kup-r:first-child { border-top: 0; }
+/* Smalle kolonner: boksen står ude til højre i stedet for formen */
+@container (max-width: 430px) {
+  .c-midt { flex: 0 0 auto; }
+  .c-midt + .c-hoejre { display: none; }
+  .pboks { flex-direction: column; align-items: flex-end; gap: 2px; padding: 6px 8px; }
+  .pboks b { font-size: 20px; }
+  .pboks small { font-size: 9.5px; letter-spacing: 0.5px; }
+  .pboks .pil { display: none; }
+  .pboks.tom b { display: none; }
+  .pboks.tom small { font-size: 11px; white-space: normal; text-align: right; max-width: 52px; line-height: 1.15; }
+  .cell .kaptajn ~ .c-midt { margin-top: 26px; }
+  .point-detaljer { padding: 6px 10px 8px; }
+  .point-detaljer .kup-r { font-size: 12.5px; }
+}

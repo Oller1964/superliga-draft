@@ -133,6 +133,7 @@ function visVarighed(ms) {
 // ---------- Ugens kampe og skader (fra data/kampe.json og data/skader.json) ----------
 var DAGE_KORT = { Mon: "man", Tue: "tirs", Wed: "ons", Thu: "tors", Fri: "fre", Sat: "lør", Sun: "søn" };
 function naesteKamp(klub) { return D.kampe[klub] || null; }
+function kortKampTid(ms) { var d = kbhDele(ms); return DAGE_KORT[d.wd] + " " + d.h + "." + ("0" + d.min).slice(-2); }
 function kampDato(ms, medTid) {
   var d = kbhDele(ms);
   return DAGE_KORT[d.wd] + " " + d.d + "/" + d.m + (medTid ? " kl. " + d.h + "." + ("0" + d.min).slice(-2) : "");
@@ -1060,8 +1061,22 @@ function tegnBoard(u, st) {
       if (pick) {
         var s = D.efterId[pick.spillerId] || { id: pick.spillerId, fornavn: "", efternavn: pick.spillerId, pos: pick.pos, klub: pick.klub };
         var sp = runde ? spillerPoint(u.nr, pick, D.picks) : null;
-        var hoejre = sp && sp.r ? '<div class="c-hoejre point">' + (sp.point > 0 ? "+" : "") + sp.point + '<small>' + (sp.kaptajn ? "point ×2" : "point") + '</small></div>' :
-          (D.efterId[pick.spillerId] ? '<div class="c-hoejre">' + form(s.pris) + '<small>form</small></div>' : "");
+        var hoejre = D.efterId[pick.spillerId] ? '<div class="c-hoejre">' + form(s.pris) + '<small>form</small></div>' : "";
+        var midt = "", detaljer = "";
+        if (sp && sp.r) {
+          // Live: har klubben ikke spillet endnu, vises hvornår den spiller i stedet for 0 point
+          var venter = runde.live && !sp.r.min && !(runde.modtaget && runde.modtaget[pick.klub] !== undefined);
+          var pNoegle = pick.uid + "|" + pick.spillerId;
+          if (venter) {
+            var nk = naesteKamp(pick.klub);
+            midt = '<div class="c-midt"><span class="pboks tom"><b>–</b><small>' + (nk && nk.tid ? "spiller " + kortKampTid(nk.tid) : "ikke talt med") + '</small></span></div>';
+          } else {
+            var aaben = !!aabnePoint[pNoegle];
+            midt = '<div class="c-midt"><button type="button" class="pboks' + (aaben ? " aaben" : "") + '" data-point="' + esc(pNoegle) + '" aria-expanded="' + aaben + '">' +
+              '<b>' + (sp.point > 0 ? "+" : "") + sp.point + '</b><small>point' + (sp.kaptajn ? " · C ×2" : "") + '</small><i class="pil">' + (aaben ? "▴" : "▾") + '</i></button></div>';
+            if (aaben) detaljer = '<div class="point-detaljer">' + pointLinjer(s, sp.r, runde, sp.kaptajn ? 2 : 1, "I alt") + '</div>';
+          }
+        }
         var erKap = kap === pick.spillerId;
         var vaelgKap = kaptajnTilstand && uid === MIG;
         html += '<div class="cell klik ' + pick.pos + (vaelgKap ? " kap-valg" : "") + '" data-spiller="' + esc(pick.spillerId) + '" data-ejer="' + esc(uid) + '" tabindex="0" role="button">' +
@@ -1072,7 +1087,7 @@ function tegnBoard(u, st) {
           '<div class="c-navn">' + esc(s.efternavn) + (runde && !runde.live ? "" : skadeBadge(pick.spillerId)) + '</div>' +
           '<div class="c-sub"><span class="c-pos">' + pick.pos + '</span>' + esc(pick.klub) + (pick.auto ? ' · automatisk' : '') + '</div>' +
           (runde && !runde.live ? "" : kampLinje(pick.klub)) + '</div>' +
-          hoejre + '</div>';
+          midt + hoejre + '</div>' + detaljer;
       } else if (aktiv && r === aktivRunde) {
         html += '<div class="cell nu"><span class="c-nr">' + (r + 1) + '</span><div class="c-tx"><div class="c-for">På uret</div><div class="c-navn">' +
           (uid === MIG ? "Din tur" : "Vælger nu") + '</div></div></div>';
@@ -1524,11 +1539,18 @@ function tegnUgepoint(s, ejerUid) {
   var runde = aktivUgeNr != null ? pointRunde(aktivUgeNr) : null;
   if (!runde) { boks.hidden = true; return; }
   var r = rundePoint(s.id, s.pos, s.klub, runde);
+  var gange = ejerUid && kaptajnFor(aktivUgeNr, ejerUid, D.picks) === s.id ? 2 : 1;
+  boks.innerHTML = '<div class="kup-top"><span>Point i uge ' + aktivUgeNr + '</span>' + (runde.live ? '<span class="live-maerke">live</span>' : "") + '</div>' +
+    pointLinjer(s, r, runde, gange, ejerUid ? "I alt for " + esc(holdnavn(ejerUid)) : "I alt <small>· ikke draftet i denne uge</small>");
+  boks.hidden = false;
+}
+// Linjerne i en pointudregning (bruges i spillerkortet og på boardet)
+function pointLinjer(s, r, runde, gange, sumTekst) {
   var posNavn = POSITIONER[s.pos].toLowerCase();
   var linje = function (tekst, lille, point, kl) {
     return '<div class="kup-r' + (kl ? " " + kl : "") + '"><span>' + tekst + (lille ? ' <small>· ' + lille + '</small>' : "") + '</span><b>' + point + '</b></div>';
   };
-  var html = '<div class="kup-top"><span>Point i uge ' + aktivUgeNr + '</span>' + (runde.live ? '<span class="live-maerke">live</span>' : "") + '</div>';
+  var html = "";
   if (r.min > 0) html += linje("Spillede", r.min + " min." + (r.min >= 60 ? "" : " (under 60)"), "+" + ((r.min > 0 ? 1 : 0) + (r.min >= 60 ? 1 : 0)));
   if (r.g) html += linje("Mål", r.g + " × " + MAALPOINT[s.pos] + " (" + posNavn + ")", "+" + r.g * MAALPOINT[s.pos]);
   if (r.a) html += linje("Assist", r.a + " × 3", "+" + r.a * 3);
@@ -1536,11 +1558,8 @@ function tegnUgepoint(s, ejerUid) {
   if (r.y) html += linje("Gult kort", r.y > 1 ? r.y + " × 1" : "", "−" + r.y, "neg");
   if (r.rd) html += linje("Rødt kort", r.rd > 1 ? r.rd + " × 3" : "", "−" + 3 * r.rd, "neg");
   if (!r.min) html += '<p class="kup-tom">' + (runde.live ? "Ingen tal endnu – enten har han ikke spillet, eller kampen er ikke talt med endnu." : "Han spillede ikke i runden.") + '</p>';
-  var gange = ejerUid && kaptajnFor(aktivUgeNr, ejerUid, D.picks) === s.id ? 2 : 1;
   if (gange === 2) html += linje('<span class="kaptajn">C</span>Kaptajn · dobbelt point', "", "×2", "kap");
-  html += '<div class="kup-sum"><span>' + (ejerUid ? "I alt for " + esc(holdnavn(ejerUid)) : "I alt <small>· ikke draftet i denne uge</small>") + '</span><b>' + r.point * gange + '</b></div>';
-  boks.innerHTML = html;
-  boks.hidden = false;
+  return html + '<div class="kup-sum"><span>' + sumTekst + '</span><b>' + r.point * gange + '</b></div>';
 }
 function aabnSpillerKort(id, ejerUid) {
   var s = D.efterId[id];
@@ -1726,7 +1745,10 @@ $("spillerListe").addEventListener("click", function (e) {
   planlaegTegning();
   $("draftKnap").focus();
 });
+var aabnePoint = {};
 $("board").addEventListener("click", function (e) {
+  var pb = e.target.closest(".pboks[data-point]");
+  if (pb) { aabnePoint[pb.dataset.point] = !aabnePoint[pb.dataset.point]; tegnAlt(); return; }
   if (e.target.closest("#kapKnap")) { kaptajnTilstand = !kaptajnTilstand; tegnAlt(); return; }
   var c = e.target.closest(".cell.klik");
   if (!c) return;
@@ -1735,6 +1757,7 @@ $("board").addEventListener("click", function (e) {
 });
 $("board").addEventListener("keydown", function (e) {
   if (e.key !== "Enter" && e.key !== " ") return;
+  if (e.target.closest(".pboks")) return;
   var c = e.target.closest(".cell.klik");
   if (!c) return;
   e.preventDefault();

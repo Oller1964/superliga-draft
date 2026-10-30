@@ -1,7 +1,7 @@
 // Gør appen installerbar og hurtig at åbne. Alt hentes fra nettet først,
 // så man altid ser nyeste picks og priser; den gemte kopi bruges kun uden net.
-var CACHE = "superliga-draft-v14";
-var SKAL = ["./", "index.html", "style.css?v=14", "app.js?v=14", "firebase-config.js", "manifest.webmanifest", "ikon-192.png", "ikon-512.png", "logo.svg", "logo-maerke.svg", "favicon-32.png"];
+var CACHE = "superliga-draft-v15";
+var SKAL = ["./", "index.html", "style.css?v=15", "app.js?v=15", "firebase-config.js", "manifest.webmanifest", "ikon-192.png", "ikon-512.png", "logo.svg", "logo-maerke.svg", "favicon-32.png"];
 
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SKAL); }));
