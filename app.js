@@ -1518,6 +1518,30 @@ function chanceLedig(s) {
   return r;
 }
 
+// Spillerkortet: hvordan spillerens point i ugens runde (live eller endelige) er regnet ud
+function tegnUgepoint(s, ejerUid) {
+  var boks = $("kortUgepoint");
+  var runde = aktivUgeNr != null ? pointRunde(aktivUgeNr) : null;
+  if (!runde) { boks.hidden = true; return; }
+  var r = rundePoint(s.id, s.pos, s.klub, runde);
+  var posNavn = POSITIONER[s.pos].toLowerCase();
+  var linje = function (tekst, lille, point, kl) {
+    return '<div class="kup-r' + (kl ? " " + kl : "") + '"><span>' + tekst + (lille ? ' <small>· ' + lille + '</small>' : "") + '</span><b>' + point + '</b></div>';
+  };
+  var html = '<div class="kup-top"><span>Point i uge ' + aktivUgeNr + '</span>' + (runde.live ? '<span class="live-maerke">live</span>' : "") + '</div>';
+  if (r.min > 0) html += linje("Spillede", r.min + " min." + (r.min >= 60 ? "" : " (under 60)"), "+" + ((r.min > 0 ? 1 : 0) + (r.min >= 60 ? 1 : 0)));
+  if (r.g) html += linje("Mål", r.g + " × " + MAALPOINT[s.pos] + " (" + posNavn + ")", "+" + r.g * MAALPOINT[s.pos]);
+  if (r.a) html += linje("Assist", r.a + " × 3", "+" + r.a * 3);
+  if (r.cs && CSPOINT[s.pos]) html += linje("Clean sheet", posNavn, "+" + CSPOINT[s.pos]);
+  if (r.y) html += linje("Gult kort", r.y > 1 ? r.y + " × 1" : "", "−" + r.y, "neg");
+  if (r.rd) html += linje("Rødt kort", r.rd > 1 ? r.rd + " × 3" : "", "−" + 3 * r.rd, "neg");
+  if (!r.min) html += '<p class="kup-tom">' + (runde.live ? "Ingen tal endnu – enten har han ikke spillet, eller kampen er ikke talt med endnu." : "Han spillede ikke i runden.") + '</p>';
+  var gange = ejerUid && kaptajnFor(aktivUgeNr, ejerUid, D.picks) === s.id ? 2 : 1;
+  if (gange === 2) html += linje('<span class="kaptajn">C</span>Kaptajn · dobbelt point', "", "×2", "kap");
+  html += '<div class="kup-sum"><span>' + (ejerUid ? "I alt for " + esc(holdnavn(ejerUid)) : "I alt <small>· ikke draftet i denne uge</small>") + '</span><b>' + r.point * gange + '</b></div>';
+  boks.innerHTML = html;
+  boks.hidden = false;
+}
 function aabnSpillerKort(id, ejerUid) {
   var s = D.efterId[id];
   if (!s) return;
@@ -1537,6 +1561,7 @@ function aabnSpillerKort(id, ejerUid) {
     $("kortStatus").className = "status-boks" + (sk.status === "tvivl" ? " tvivl" : "");
     $("kortStatus").hidden = false;
   } else $("kortStatus").hidden = true;
+  tegnUgepoint(s, ejerUid);
   var nk = naesteKamp(s.klub);
   if (nk) {
     $("kortKamp").innerHTML = '<span class="lab">Næste kamp</span><span class="mod">' + troeje(nk.mod, 22) + 'mod ' + esc(KLUBBER[nk.mod] || nk.mod) +

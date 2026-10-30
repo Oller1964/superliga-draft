@@ -1536,3 +1536,16 @@ button.blok { justify-self: stretch; min-width: 0; width: 100%; }
   .kr-mod.res { font-size: 14px; letter-spacing: 0; }
   .kh { grid-template-columns: 30px 1fr 1fr; font-size: 13px; }
 }
+
+/* Spillerkort: ugens point regnet ud */
+.kort-ugepoint { margin: 4px 0 14px; padding: 12px 14px; border-radius: 4px; background: color-mix(in srgb, var(--c) 10%, var(--felt)); box-shadow: inset 3px 0 0 var(--c), var(--felt-skygge); }
+.kup-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-weight: 600; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #94a3c2; }
+.kup-r { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 5px 0; font-size: 14px; border-top: 1px solid rgba(255, 255, 255, 0.06); }
+.kup-r small, .kup-sum small { color: #94a3c2; font-size: 12px; font-weight: 400; }
+.kup-r b { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.kup-r.neg b { color: var(--ANG); }
+.kup-r.kap b { color: var(--guld); }
+.kup-r .kaptajn { position: static; display: inline-grid; place-items: center; margin-right: 8px; vertical-align: -3px; box-shadow: none; line-height: 1; }
+.kup-tom { margin: 4px 0 2px; color: #94a3c2; font-size: 13px; }
+.kup-sum { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 4px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.18); font-weight: 600; }
+.kup-sum b { font-size: 24px; font-weight: 700; color: var(--guld); }
