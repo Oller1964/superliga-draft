@@ -1766,3 +1766,50 @@ html::after { content: none; }
   transform: translate(-50%, -50%) rotate(0deg); animation: mig-drej 6s linear infinite; will-change: transform; }
 @keyframes mig-drej { to { transform: translate(-50%, -50%) rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .kol.mig-kol::after { animation: none; background: var(--guld); } }
+
+/* Mock draft i samme stil som draftboardet (TV-grafik, B1) */
+.mock-intro { background: rgba(15,17,21,0.88); box-shadow: none; border-top: 3px solid #2a2f38; padding: 14px 16px; }
+.mock-intro b { text-transform: uppercase; letter-spacing: .6px; font-weight: 800; font-size: 20px; }
+.mock-intro p { color: var(--daempet); }
+.mock-intro button { border-radius: 0; background: transparent; box-shadow: inset 0 0 0 1px #2a2f38; color: #fff; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+.mock-liste { gap: 6px; }
+.mock-raekke { grid-template-columns: 190px repeat(3, minmax(0, 1fr)); gap: 6px; }
+.mr-lab { gap: 0; padding: 0; background: rgba(15,17,21,0.88); border-top: 3px solid #2a2f38; align-items: stretch; }
+.mr-pick { width: 58px; height: auto; border-radius: 0; background: #000; box-shadow: none; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: 800; font-size: 26px; line-height: 1; }
+.mr-pick small { margin: 0 0 3px; font-size: 9.5px; letter-spacing: 2px; color: var(--daempet); }
+.mr-tx { padding: 8px 10px; justify-content: center; }
+.mr-tx b { text-transform: uppercase; letter-spacing: .5px; font-weight: 800; font-size: 18px; }
+.mr-tx small { font-size: 12px; color: var(--daempet); }
+.mr-lab .om { color: var(--daempet); }
+.mr-lab .tog { color: var(--MID); text-transform: uppercase; letter-spacing: .5px; font-weight: 700; }
+.mock-raekke.nu .mr-lab { border-top-color: var(--guld); }
+.mock-raekke.nu .mr-pick { background: var(--guld); color: #000; }
+.mock-raekke.nu .mr-pick small { color: #3a2c08; }
+.mock-raekke.nu .mr-tx b, .mr-lab .nu-tekst { color: var(--guld); text-transform: uppercase; letter-spacing: .5px; }
+.mock-raekke.gjort { opacity: 0.55; }
+.mock-felt { min-height: 68px; padding: 6px 70px 6px 30px; gap: 10px; border-radius: 0; background: rgba(15,17,21,0.8); box-shadow: none; }
+.mock-felt.MM, .mock-felt.FOR, .mock-felt.MID, .mock-felt.ANG { background: rgba(15,17,21,0.8); }
+.mf-nr { width: 20px; height: 100%; padding: 0; clip-path: none; border-radius: 0; background: var(--c); color: #000; font-weight: 800; font-size: 14px; }
+.mf-for { display: block; font-weight: 500; font-size: 11.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--daempet); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mf-navn { text-transform: uppercase; font-weight: 800; font-size: 18px; letter-spacing: .4px; line-height: 1.15; }
+.mf-tx small { color: var(--daempet); }
+.mf-tx small .c-pos { box-shadow: none; padding: 0; margin-right: 4px; color: var(--c); }
+.mf-status { display: inline-block; margin-top: 2px; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+.mf-form { position: absolute; right: 26px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; min-width: 40px; padding: 5px 6px; background: #000; box-shadow: inset 0 0 0 1px #2a2f38; }
+.mf-form b { font-weight: 800; font-size: 20px; line-height: 1; color: #fff; }
+.mf-form small { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--guld); margin-top: 2px; }
+.mf-fjern { right: 2px; top: 4px; transform: none; width: 20px; height: 20px; border-radius: 0; color: #5d6470; }
+.mock-felt.bud { box-shadow: inset 0 0 0 2px var(--guld); }
+.mock-felt.bud .mf-status { color: var(--guld); }
+.mock-felt.bud .mf-form { box-shadow: inset 0 0 0 1px var(--guld); }
+.mock-felt.taget { opacity: 0.4; }
+.mock-felt.taget .mf-navn { text-decoration: line-through; }
+.mock-felt.taget .mf-status { color: var(--ANG); }
+.mock-felt.din .mf-status { color: var(--MID); }
+.mock-felt.tom { background: rgba(11,12,16,0.6); box-shadow: inset 0 0 0 1px #20242c; color: #6b7280; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; font-size: 13px; padding-right: 12px; }
+.mock-felt.tom:hover { color: var(--guld); box-shadow: inset 0 0 0 1px var(--guld); }
+.mock-felt.tom .mf-nr { background: #1a1d23; color: #3a404b; }
+@media (max-width: 1000px) {
+  .mock-raekke { grid-template-columns: 1fr; }
+  .mr-lab { min-height: 54px; }
+}

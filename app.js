@@ -1460,9 +1460,10 @@ function tegnMock(u, st) {
       else if (e[id]) { status = "Taget af " + esc(holdnavn(e[id])); kl = " taget"; }
       else if (bud === id) { status = "Dit bud"; kl = " bud"; }
       else if (nu && !maaVaelges(MIG, s, picks)) { status = "Positionen er fyldt"; kl = " taget"; }
-      html += '<div class="mock-felt ' + s.pos + kl + '"><span class="mf-nr">' + (i + 1) + '</span>' + troeje(s.klub, 22) +
-        '<span class="mf-tx"><span class="mf-navn">' + esc(fuldtNavn(s)) + skadeBadge(s.id) + '</span>' +
-        '<small><span class="c-pos">' + s.pos + '</span>' + esc(s.klub) + ' · form ' + form(s.pris) + (status ? ' · <b>' + status + '</b>' : "") + '</small></span>' +
+      html += '<div class="mock-felt ' + s.pos + kl + '"><span class="mf-nr">' + (i + 1) + '</span>' + troeje(s.klub, 28) +
+        '<span class="mf-tx"><span class="mf-for">' + esc(s.fornavn || "\u00a0") + '</span><span class="mf-navn">' + esc(s.efternavn) + skadeBadge(s.id) + '</span>' +
+        '<small><span class="c-pos">' + s.pos + '</span>' + esc(s.klub) + '</small>' + (status ? '<span class="mf-status">' + status + '</span>' : "") + '</span>' +
+        '<span class="mf-form"><b>' + form(s.pris) + '</b><small>form</small></span>' +
         '<button type="button" class="mf-fjern" data-r="' + r + '" data-c="' + i + '" aria-label="Fjern">×</button></div>';
     });
     html += '</div>';
