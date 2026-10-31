@@ -29,6 +29,17 @@ var BUDGET_FAKTOR = 1.35;
 var MAALPOINT = { MM: 6, FOR: 6, MID: 5, ANG: 4 };
 var CSPOINT = { MM: 4, FOR: 4, MID: 1, ANG: 0 };
 
+// Baggrundens små lys: SVG'en sættes direkte ind i siden, så browseren kun flytter prikkerne
+(function () {
+  try {
+    if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    fetch(window.innerWidth < 600 ? "grafik/topo_lys_mobil.svg" : "grafik/topo_lys.svg")
+      .then(function (r) { return r.ok ? r.text() : ""; })
+      .then(function (t) { if (t.indexOf("<svg") === 0) document.getElementById("lysLag").innerHTML = t; })
+      .catch(function () {});
+  } catch (e) {}
+})();
+
 firebase.initializeApp(window.FIREBASE_CONFIG);
 var auth = firebase.auth();
 var db = firebase.firestore();

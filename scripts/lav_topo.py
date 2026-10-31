@@ -38,19 +38,24 @@ kandidater = sorted([s for s in stier if not s[1]], key=lambda s: -laengde(s[0])
 antal = int(sys.argv[2]) if len(sys.argv) > 2 else 14
 valgte = kandidater[:antal]
 rng2 = np.random.default_rng(3)
-ud = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" preserveAspectRatio="xMidYMid slice" fill="none" stroke-linecap="round">',
-      '<defs><filter id="glod" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3"/></filter></defs><style>',
-      '.l{animation:koer var(--t) linear infinite;animation-delay:var(--d)} .h{animation:koerh var(--t) linear infinite;animation-delay:var(--d)}',
-      '@keyframes koer{from{stroke-dashoffset:1000}to{stroke-dashoffset:0}} @keyframes koerh{from{stroke-dashoffset:946}to{stroke-dashoffset:-54}}',
-      '@media (prefers-reduced-motion:reduce){.l,.h{animation:none}}</style>']
+# Lysene er små prikker, der flyttes langs kurverne med <animateMotion>. Det er billigt for browseren:
+# kun prikkerne tegnes om, ikke hele baggrunden. Ingen sløringsfiltre.
+ud = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">',
+      '<defs><radialGradient id="skaer"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>']
 for i, (d, _, b) in enumerate(valgte):
-    t = laengde(d) / rng2.uniform(55, 85) / hastighed       # sekunder pr. omgang ud fra kurvens længde
-    forsink = -rng2.uniform(0, t)
-    stil = f'style="--t:{t:.1f}s;--d:{forsink:.1f}s"'
-    if rng2.random() < 0.5: d = "M" + " L".join(reversed(d[1:].split(" L")))   # nogle kører den anden vej
-    ud.append(f'<path class="l" d="{d}" pathLength="1000" stroke="#ffffff" stroke-width="2" stroke-dasharray="60 940" opacity=".28" {stil}/>')
-    ud.append(f'<path class="h" d="{d}" pathLength="1000" stroke="#ffffff" stroke-width="6" stroke-dasharray="6 994" opacity=".9" filter="url(#glod)" {stil}/>')
-    ud.append(f'<path class="h" d="{d}" pathLength="1000" stroke="#ffffff" stroke-width="2.2" stroke-dasharray="6 994" {stil}/>')
+    ud.append(f'<path id="k{i}" d="{d}"/>')
+ud.append('</defs>')
+for i, (d, _, b) in enumerate(valgte):
+    t = laengde(d) / rng2.uniform(55, 85) / hastighed
+    start = -rng2.uniform(0, t)
+    baglaens = rng2.random() < 0.5
+    retning = ' keyPoints="1;0" keyTimes="0;1" calcMode="linear"' if baglaens else ''
+    def bevaeg(forsink):
+        return f'<animateMotion dur="{t:.1f}s" begin="{start + forsink:.2f}s" repeatCount="indefinite"{retning}><mpath href="#k{i}"/></animateMotion>'
+    # hale: små, svage prikker der ligger lidt bagud
+    for j, (r, op) in enumerate([(1.1, .18), (1.4, .3), (1.7, .45)]):
+        ud.append(f'<circle r="{r}" fill="#fff" opacity="{op}">{bevaeg(-(3 - j) * 0.18 * 70 / 70)}</circle>')
+    ud.append(f'<g>{bevaeg(0)}<circle r="9" fill="url(#skaer)"/><circle r="2.2" fill="#fff"/></g>')
 ud.append("</svg>")
 navn = sys.argv[3] if len(sys.argv) > 3 else ("topo_lys.svg" if hastighed == 1 else "topo_lys_hurtig.svg")
 open(navn, "w").write("".join(ud))

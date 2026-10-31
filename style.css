@@ -1749,3 +1749,20 @@ button.primaer, .knap-primaer, button[type="submit"] { border-radius: 0; }
 .k-kvote span.fuld { color: #000; }
 .ticker, .tb-deadline, .pill { border-radius: 0; }
 .ticker { background: rgba(0, 0, 0, 0.88); border: 0; border-top: 2px solid var(--guld); }
+
+/* ---- Ydelse: glat animation ---- */
+/* Lysene ligger i deres eget lag (indsat af app.js) i stedet for i et baggrundsbillede */
+html::after { content: none; }
+.lys-lag { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.9; will-change: transform; contain: strict; }
+.lys-lag svg { display: block; width: 100%; height: 100%; }
+/* Ingen sløring bag dialoger – den skulle regnes om, hver gang lysene flyttede sig */
+.setup { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(0, 0, 0, 0.82); }
+.t-flyt { will-change: transform; }
+/* Guldstregen om dit hold: en drejende flade bag kolonnen i stedet for en gradient, der tegnes om */
+.kol.mig-kol { position: relative; isolation: isolate; overflow: hidden; padding: 3px; }
+.kol.mig-kol::before { content: ""; position: absolute; inset: 3px; padding: 0; z-index: -1; border-radius: 0; background: #07080b; -webkit-mask: none; mask: none; animation: none; }
+.kol.mig-kol::after { content: ""; position: absolute; left: 50%; top: 50%; z-index: -2; height: 120%; aspect-ratio: 1; pointer-events: none;
+  background: conic-gradient(rgba(242, 193, 78, 0.25) 0 60%, var(--guld) 78%, #fff3c9 86%, var(--guld) 92%, rgba(242, 193, 78, 0.25) 100%);
+  transform: translate(-50%, -50%) rotate(0deg); animation: mig-drej 6s linear infinite; will-change: transform; }
+@keyframes mig-drej { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .kol.mig-kol::after { animation: none; background: var(--guld); } }
