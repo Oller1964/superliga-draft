@@ -1633,3 +1633,119 @@ button.blok { justify-self: stretch; min-width: 0; width: 100%; }
   .st-navn { font-size: 15px; }
   .st-tabel th, .st-tabel td { font-size: 14px; padding: 8px 6px; }
 }
+
+/* ===================================================================
+   TEMA: TV-grafik (B1) – næsten sort, skarpe hjørner, kraftig smal skrift,
+   smal positionsstribe med nummer, højdekurver med små lys i baggrunden.
+   Ligger sidst, så det vinder over de ældre regler ovenfor.
+   =================================================================== */
+/* B · TV-grafik: næsten sort, skarpe hjørner, kraftig smal skrift, positionen som en farvet blok */
+:root {
+  --bg: #06070a; --felt: #0f1115; --felt2: #171a20; --kant: rgba(255,255,255,0.08);
+  --tekst: #ffffff; --daempet: #8a919e; --guld: #f2c14e;
+  --MM: #f2a93b; --FOR: #3d8bff; --MID: #19c37d; --ANG: #ff4560;
+  --felt-skygge: none;
+}
+html, body { background: var(--bg); font-family: 'Barlow Condensed', sans-serif; }
+.trae { display: none; }
+.topbar { background: #000; border-bottom: 2px solid var(--guld); }
+#tbTitel { text-transform: uppercase; letter-spacing: 1.5px; font-weight: 800; font-size: 20px; }
+.forrige, .k-mgr, .timer, .bekraeft, button.blok { background: var(--felt); box-shadow: none; border-radius: 0; border-top: 3px solid #2a2f38; }
+button.blok { border-top: 3px solid var(--guld); background: var(--felt); }
+button.blok .b-label { clip-path: none; }
+.b-navn, .km-navn { text-transform: uppercase; font-weight: 800; letter-spacing: .5px; }
+.timer { font-weight: 800; }
+.hovedfaner { gap: 0; border-bottom: 1px solid var(--kant); margin: 0 16px 14px; }
+.hovedfaner button { background: transparent; box-shadow: none; border-radius: 0; color: var(--daempet); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; font-size: 15px; padding: 10px 16px; }
+.hovedfaner button[aria-pressed="true"] { background: transparent; color: #fff; box-shadow: inset 0 -3px 0 var(--guld); }
+.board { gap: 12px; }
+.kol { background: transparent; box-shadow: none; padding: 0; gap: 3px; border-radius: 0; }
+.kol.aktiv { background: transparent; box-shadow: none; }
+.kol-top { background: var(--felt); border-radius: 0; padding: 12px 10px; margin-bottom: 6px; border-top: 3px solid #2a2f38; }
+.kol.mig-kol .kol-top { border-top-color: var(--guld); }
+.kol.mig-kol::before { border-radius: 0; }
+.k-mig { color: var(--guld); letter-spacing: 2px; }
+.k-navn { text-transform: uppercase; font-weight: 800; font-size: 21px; letter-spacing: .5px; }
+.k-tal { font-size: 34px; font-weight: 800; }
+.k-kvote span { border-radius: 0; }
+.cell, .cell.MM, .cell.FOR, .cell.MID, .cell.ANG { height: 60px; border-radius: 0; background: var(--felt); box-shadow: none; padding-left: 50px; }
+.cell.MM:hover, .cell.FOR:hover, .cell.MID:hover, .cell.ANG:hover { background: var(--felt2); }
+.c-nr { width: 38px; height: 100%; padding: 0; clip-path: none; border-radius: 0; background: var(--c, #2a2f38); color: #000; font-size: 22px; font-weight: 800; }
+.cell.tom .c-nr { background: #1a1d23; color: #3a404b; }
+.c-for { color: var(--daempet); letter-spacing: 1.5px; font-size: 11.5px; }
+.cell .c-navn { text-transform: uppercase; font-weight: 800; font-size: 19px; letter-spacing: .4px; }
+.c-sub, .kamp { color: var(--daempet); }
+.c-pos { box-shadow: none; padding: 0; color: var(--c); }
+.kaptajn { border-radius: 0; box-shadow: none; background: var(--guld); color: #000; }
+.pboks { border-radius: 0; background: #000; box-shadow: inset 0 0 0 1px #2a2f38; }
+.pboks b { color: #fff; }
+.pboks small { color: var(--guld); }
+.point-detaljer { border-radius: 0; background: #000; box-shadow: none; margin-top: -3px; border-left: 3px solid var(--guld); }
+.cell.tom { background: #0b0c10; opacity: 1; }
+.live-maerke { border-radius: 0; background: #ff2a3d; }
+.cell .kaptajn ~ .c-midt { margin-top: 16px; }
+/* B1: smal farvestribe med nummeret */
+.cell, .cell.MM, .cell.FOR, .cell.MID, .cell.ANG { padding-left: 30px; }
+.c-nr { width: 20px; font-size: 14px; }
+/* Rettelser: lidt højere linjer, kaptajnens pointboks fri af kanten */
+.cell, .cell.MM, .cell.FOR, .cell.MID, .cell.ANG { height: 68px; }
+.cell .kaptajn ~ .c-midt { margin-top: 18px; }
+.kaptajn { top: 4px; right: 6px; }
+
+/* Baggrund: højdekurver der altid ses svagt, og små lys der kører rundt langs stregerne */
+html::before, html::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; background: center / cover no-repeat; }
+html::before { background-image: url("grafik/topo.svg"); opacity: 0.16; }
+html::after { background-image: url("grafik/topo_lys.svg"); opacity: 0.9; }
+.app { position: relative; z-index: 1; }
+/* Kortene lidt gennemsigtige, så mønsteret anes bagved */
+.kol-top, .forrige, .k-mgr, .timer, .bekraeft, button.blok { background: rgba(15,17,21,0.78); }
+.cell, .cell.MM, .cell.FOR, .cell.MID, .cell.ANG { background: rgba(15,17,21,0.8); }
+.cell.tom { background: rgba(11,12,16,0.7); }
+html, body { background-color: var(--bg); }
+
+/* Færre lys på telefoner (sparer batteri) */
+@media (max-width: 600px) { html::after { background-image: url("grafik/topo_lys_mobil.svg"); } }
+.trae { display: none; }
+
+/* Tema på resten af appen: dialoger, historik, kampe, mock, stilling, statistik, felter */
+.setup { background: rgba(0, 0, 0, 0.78); }
+.setup-panel { background: #0c0e12; border: 0; border-top: 3px solid var(--guld); border-radius: 0; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255,255,255,0.06); }
+.kort-panel { border-top-color: var(--c, var(--guld)); }
+.b-foto { background: #000; border-radius: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1); }
+.ikon { border-radius: 0; background: transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12); }
+input, select, textarea { border-radius: 0 !important; background: #000 !important; border: 1px solid #2a2f38 !important; color: #fff; }
+input:focus, select:focus, textarea:focus { border-color: var(--guld) !important; outline: none; }
+button.primaer, .knap-primaer, button[type="submit"] { border-radius: 0; }
+.google-knap, #googleKnap { border-radius: 0; }
+.kort-saeson > div, .kort-draft > div { border-radius: 0; background: #14171c; box-shadow: none; }
+.kort-ugepoint { border-radius: 0; background: #000; box-shadow: inset 3px 0 0 var(--c); }
+.naeste-kamp, .status-boks { border-radius: 0; }
+.vinder-baand { border-radius: 0; background: var(--felt); box-shadow: none; border-top: 3px solid var(--guld); }
+.hist-raekke { border-radius: 0; background: rgba(15,17,21,0.85); box-shadow: none; border-left: 3px solid #2a2f38; }
+.hist-raekke:hover { background: var(--felt2); border-left-color: var(--guld); }
+.hist-raekke .uge { text-transform: uppercase; letter-spacing: .5px; font-weight: 800; }
+.hist-raekke .se { color: var(--guld); }
+.hist-hold { border-radius: 0; background: var(--felt); box-shadow: none; }
+.stilling-tabel tr.mig-raekke td { background: rgba(242, 193, 78, 0.09); }
+.stilling-graf, .st-tile, .st-boks { border-radius: 0; background: rgba(15,17,21,0.85); box-shadow: none; }
+.st-tile { border-top: 3px solid #2a2f38; }
+.st-tile.st-mig { border-top-color: var(--guld); box-shadow: none; }
+.st-lab { letter-spacing: 2px; }
+.runde-nav { border-radius: 0; background: rgba(15,17,21,0.9); box-shadow: none; }
+.rn-pil { border-radius: 0; }
+.kamp-raekke, .kamp-raekke.aaben { border-radius: 0; background: rgba(15,17,21,0.88); box-shadow: none; }
+.kamp-detaljer { border-radius: 0; background: #000; box-shadow: none; border-left: 3px solid var(--guld); }
+.kr-mod.res { border-radius: 0; background: #000; box-shadow: inset 0 0 0 1px #2a2f38; }
+.kr-hold { text-transform: uppercase; letter-spacing: .4px; font-weight: 800; }
+.kamp-dag { color: var(--guld); }
+.regel-kort { border-radius: 0; background: rgba(15,17,21,0.88); box-shadow: none; border-top: 3px solid #2a2f38; }
+.mock-felt, .mock-felt.tom, .mr-pick, .mock-forslag, .mock-intro { border-radius: 0; }
+.mock-felt.tom, .mr-pick { background: #0b0c10; }
+.sp-knap, .sp-knap:hover { border-radius: 0; }
+.sp-knap:hover { background: var(--felt2); }
+.pboks:hover { background: #000; box-shadow: inset 0 0 0 1px var(--guld); }
+.point-detaljer { border-radius: 0; }
+.kort-tabel .point, .stilling-tabel .plads { color: var(--guld); }
+.k-kvote span.fuld { color: #000; }
+.ticker, .tb-deadline, .pill { border-radius: 0; }
+.ticker { background: rgba(0, 0, 0, 0.88); border: 0; border-top: 2px solid var(--guld); }
