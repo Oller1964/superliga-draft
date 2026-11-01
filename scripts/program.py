@@ -109,6 +109,10 @@ def main():
             res = ret_res(d.get("res"))
             if res:
                 kamp["res"] = res
+            if d.get("haendelser") is None:
+                # Ingen hændelser fundet endnu: behold det gemte (eller null), så kampen prøves igen
+                opdateret.append(h + "-" + u + (" %d-%d" % tuple(kamp["res"]) if kamp["res"] else "") + " (uden hændelser)")
+                continue
             hl = []
             for e in d.get("haendelser") or []:
                 typ, klub = str(e.get("type", "")).lower(), str(e.get("klub", "")).upper()
